@@ -190,8 +190,6 @@ func MakeChData(dataOrg string, chData ChData) (string, error){
 	chByte[5] = byte(chData.Step)
 
 	name_sjis, _ := UTF8toSJIS(chData.Name)
-	fmt.Printf("name: %s\n", chData.Name)
-	fmt.Printf("len: %d\n", len(name_sjis))
 	for i := 0; i < len(name_sjis); i++ {
 		if i >= 30 {
 			break
