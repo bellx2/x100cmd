@@ -8,7 +8,8 @@
 
 ## :beginner: 使い方
 
-- ビルド済みバイナリーを[Realeses](https://github.com/bellx2/x100cmd/releases/)よりダウンロードするか、ソースからビルドします。
+- [Homebrew](https://brew.sh/index_ja)がインストールされていれば`brew install bellx2/tap/x100cmd`でインストールできます。
+- ビルド済みバイナリーを[Realeses](https://github.com/bellx2/x100cmd/releases/)よりダウンロードし任意の場所に置くか、ソースからのビルドも可能です。
 - [DJ-X100](https://www.alinco.co.jp/product/electron/detail/djx100.html) を USB ケーブルで接続します。
 
 `read` コマンドを使って指定チャンネルのデータを読み込み表示します。ポートは自動認識します。
