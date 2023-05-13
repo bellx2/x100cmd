@@ -2,3 +2,4 @@
 dist/
 backup/
 x100cmd
+.DS_Store
