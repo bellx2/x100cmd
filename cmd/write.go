@@ -54,6 +54,17 @@ var writeCmd = &cobra.Command{
 				os.Exit(1)
 			}
 		}
+
+		step := cmd.Flag("step").Value.String()
+		if (step != ""){
+			chData.Step = djx100.ChStep2Num(step)
+			if (chData.Step == -1){
+				err := fmt.Errorf("invalid step: %s", step)
+				fmt.Println(err)
+				os.Exit(1)
+			}
+		}
+		
 		name := cmd.Flag("name").Value.String()
 		if (name != ""){
 			chData.Name = name
@@ -113,6 +124,7 @@ func init() {
 	writeCmd.Flags().BoolP("restart", "r", false, "Send Restart Command")
 	writeCmd.Flags().Float32P("freq", "f", 0, "Freqency")
 	writeCmd.Flags().StringP("mode", "m", "", "Mode [FM,NFM,AM,NAM,T98,T102_B54...]")
+	writeCmd.Flags().StringP("step", "s", "", "Step [6k25,10k,12k5,20k .... ]")
 	writeCmd.Flags().StringP("name", "n", "", "Name")
 	writeCmd.Flags().BoolP("yes", "y", false, "Without Confirmation")
 }

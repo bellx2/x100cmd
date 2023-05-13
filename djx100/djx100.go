@@ -26,12 +26,13 @@ type ChData struct {
 	Freq float64
 	Mode int
 	Name string
+	Step int
 }
 func (d ChData) IsEmpty() bool {
 	return d.Freq == 0
 }
 func (d ChData) String() string {
-	return fmt.Sprintf(`{"freq":%f, "mode":"%s", "name":"%s", "empty": %v}`, d.Freq, ChMode[d.Mode], d.Name, d.IsEmpty())
+	return fmt.Sprintf(`{"freq":%f, "mode":"%s", "step":"%s", "name":"%s", "empty": %v}`, d.Freq, ChMode[d.Mode], ChStep[d.Step], d.Name, d.IsEmpty())
 }
 
 var ChMode = []string{"FM", "NFM", "AM", "NAM", "T98", "T102_B54", "DMR", "T61_typ1", "T61_typ2","T61_typ3","T61_typ4","", "", "dPMR","DSTAR","C4FM","AIS","ACERS","POCSAG","12KIF_W","12KIF_N" }
@@ -152,10 +153,12 @@ func ParseChData(str string)(ChData, error){
 
 	freq, _ := strconv.ParseUint(str[6:8] + str[4:6] + str[2:4] + str[0:2], 16, 32)
 	fmode, _ := strconv.ParseUint(str[8:10], 16, 8)
+	fstep, _ := strconv.ParseUint(str[10:12], 16, 8)
 	name, _ := hex.DecodeString(string(str[86:145]))	// SJIS
 
 	d.Freq = float64(freq)/1000000
 	d.Mode = int(fmode)
+	d.Step = int(fstep)
 	d.Name, _ = SJIStoUTF8(string(name))
 
 	return d, nil
@@ -184,6 +187,7 @@ func MakeChData(dataOrg string, chData ChData) (string, error){
 	}	
 
 	chByte[4] = byte(chData.Mode)
+	chByte[5] = byte(chData.Step)
 
 	name_sjis, _ := UTF8toSJIS(chData.Name)
 	fmt.Printf("name: %s\n", chData.Name)
