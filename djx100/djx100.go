@@ -35,7 +35,7 @@ func (d ChData) String() string {
 	return fmt.Sprintf(`{"freq":%f, "mode":"%s", "step":"%s", "name":"%s", "empty": %v}`, d.Freq, ChMode[d.Mode], ChStep[d.Step], d.Name, d.IsEmpty())
 }
 
-var ChMode = []string{"FM", "NFM", "AM", "NAM", "T98", "T102_B54", "DMR", "T61_typ1", "T61_typ2","T61_typ3","T61_typ4","", "", "dPMR","DSTAR","C4FM","AIS","ACERS","POCSAG","12KIF_W","12KIF_N" }
+var ChMode = []string{"FM", "NFM", "AM", "NAM", "T98", "T102_B54", "DMR", "T61_typ1", "T61_typ2","T61_typ3","T61_typ4","", "", "dPMR","DSTAR","C4FM","AIS","ACARS","POCSAG","12KIF_W","12KIF_N" }
 
 func ChMode2Num(mode string) (int){
 	if mode == "" {
