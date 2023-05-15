@@ -155,12 +155,12 @@ func ParseChData(str string)(ChData, error){
 	fmode, _ := strconv.ParseUint(str[8:10], 16, 8)
 	fstep, _ := strconv.ParseUint(str[10:12], 16, 8)
 	name, _ := hex.DecodeString(string(str[86:145]))	// SJIS
+	name_utf8, _ := SJIStoUTF8(string(name))
 
 	d.Freq = float64(freq)/1000000
 	d.Mode = int(fmode)
 	d.Step = int(fstep)
-	d.Name, _ = SJIStoUTF8(string(name))
-
+	d.Name = strings.TrimRight(name_utf8, "\x00")
 	return d, nil
 }
 
