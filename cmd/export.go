@@ -8,8 +8,6 @@ import (
 	"encoding/csv"
 	"fmt"
 	"os"
-	"strconv"
-	"strings"
 
 	"github.com/bellx2/x100cmd/djx100"
 	"github.com/cheggaaa/pb/v3"
@@ -58,7 +56,7 @@ var exportCmd = &cobra.Command{
 				bar.Increment()
 				continue
 			}
-			w.Write([]string{strconv.Itoa(ch), strconv.FormatFloat(chData.Freq,'f',-1,64), djx100.ChMode[chData.Mode], djx100.ChStep[chData.Step], strings.TrimLeft(chData.Name, "\x00")})
+			w.Write([]string{fmt.Sprintf("%03d",ch), fmt.Sprintf("%.6f",chData.Freq), djx100.ChMode[chData.Mode], djx100.ChStep[chData.Step], chData.Name})
 			bar.Increment()
 		}
 		bar.Finish()
