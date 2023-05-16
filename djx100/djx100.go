@@ -190,14 +190,11 @@ func MakeChData(dataOrg string, chData ChData) (string, error){
 	chByte[5] = byte(chData.Step)
 
 	name_sjis, _ := UTF8toSJIS(chData.Name)
-	for i := 0; i < len(name_sjis); i++ {
-		if i >= 30 {
-			break
+	for i := 0; i < 29; i++ {
+		chByte[0x2b+i] = 0x00
+		if i < len(name_sjis) {
+			chByte[0x2b+i] = name_sjis[i]
 		}
-		chByte[43 + i] = name_sjis[i]
-	}
-	for i := len(name_sjis); i<30 ; i++ {
-		chByte[43 + i] = 0x00
 	}
 
 	return hex.EncodeToString(chByte), nil
