@@ -3,6 +3,7 @@ module github.com/bellx2/x100cmd
 go 1.20
 
 require (
+	github.com/cheggaaa/pb/v3 v3.1.2
 	github.com/manifoldco/promptui v0.9.0
 	github.com/rs/zerolog v1.29.1
 	github.com/spf13/cobra v1.7.0
@@ -12,7 +13,6 @@ require (
 
 require (
 	github.com/VividCortex/ewma v1.2.0 // indirect
-	github.com/cheggaaa/pb/v3 v3.1.2 // indirect
 	github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e // indirect
 	github.com/creack/goselect v0.1.2 // indirect
 	github.com/fatih/color v1.14.1 // indirect

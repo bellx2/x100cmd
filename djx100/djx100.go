@@ -6,11 +6,12 @@ package djx100
 
 import (
 	"bufio"
+	"bytes"
+	"encoding/binary"
 	"encoding/hex"
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"strconv"
 	"strings"
 
 	"go.bug.st/serial"
@@ -25,22 +26,25 @@ var FreqMax = 470.0
 type ChData struct {
 	Freq float64
 	Mode int
-	Name string
 	Step int
+	OffsetStep int
+	Name string
+	ShiftFreq float64
+	Att int
+	Sq int
+	Tone int
+	DCS int
 }
 func (d ChData) IsEmpty() bool {
 	return d.Freq == 0
 }
 func (d ChData) String() string {
-	return fmt.Sprintf(`{"freq":%f, "mode":"%s", "step":"%s", "name":"%s", "empty": %v}`, d.Freq, ChMode[d.Mode], ChStep[d.Step], d.Name, d.IsEmpty())
+	return fmt.Sprintf(`{"freq":%f, "mode":"%s", "step":"%s", "name":"%s", "offset_step":%b, "shift_freq":"%f", "att":"%s", "sq":"%s", "tone":"%s", "DCS":"%s", "empty": %v}`, d.Freq, ChMode[d.Mode], ChStep[d.Step], d.Name, d.OffsetStep, d.ShiftFreq, ChAtt[d.Att], ChSq[d.Sq], ChTone[d.Tone], ChDCS[d.DCS], d.IsEmpty())
 }
 
 var ChMode = []string{"FM", "NFM", "AM", "NAM", "T98", "T102_B54", "DMR", "T61_typ1", "T61_typ2","T61_typ3","T61_typ4","", "", "dPMR","DSTAR","C4FM","AIS","ACARS","POCSAG","12KIF_W","12KIF_N" }
 
 func ChMode2Num(mode string) (int){
-	if mode == "" {
-		return -1
-	}
 	for i, v := range ChMode {
 		if v == mode {
 			return i
@@ -52,11 +56,48 @@ func ChMode2Num(mode string) (int){
 var ChStep = []string{"1k","5k","6k25","8k33","10k","12k5","15k","20k","25k","30k","50k","100k","125k","200k"}
 
 func ChStep2Num(step string) (int){
-	if step == "" {
-		return -1
-	}
 	for i, v := range ChStep {
 		if v == step {
+			return i
+		}
+	}
+	return -1
+}
+
+var ChAtt = []string{"OFF","10db","20db"}
+func ChAtt2Num(att string) (int){
+	for i, v := range ChAtt {
+		if v == att {
+			return i
+		}
+	}
+	return -1
+}
+
+var ChSq = []string{"OFF","CTCSS","DCS","R_CTCSS","R_DCS","JR","MSK"}
+func ChSq2Num(sql string) (int){
+	for i, v := range ChSq {
+		if v == sql {
+			return i
+		}
+	}
+	return -1
+}
+
+var ChTone = []string{"670","693","719","744","770","797","825","854","885","915","948","974","1000","1035","1072","1109","1148","1188","1230","1273","1318","1355","1413","1462","1415","1567","1598","1622","1655","1679","1713","1738","1773","1799","1835","1862","1899","1928","1966","1995","2035","2065","2107","2181","2257","2291","2336","2418","2503","2541"}
+func ChTone2Num(tone string) (int){
+	for i, v := range ChTone {
+		if v == tone {
+			return i
+		}
+	}
+	return -1
+}
+
+var ChDCS = []string{"017","023","025","026","031","032","036","043","047","050","051","053","054","065","071","072","073","074","114","115","116","122","125","131","132","134","143","145","152","155","156","162","165","172","174","205","212","223","225","226","243","244","245","246","251","252","255","261","263","265","266","271","274","306","311","315","325","331","332","343","346","351","356","364","365","371","411","412","413","423","431","432","445","446","452","454","455","462","464","465","466","503","506","516","523","526","532","546","565","606","612","624","627","631","632","654","662","664","703","712","723","731","732","734","743","754"}
+func ChDCS2Num(dcs string) (int){
+	for i, v := range ChDCS {
+		if v == dcs {
 			return i
 		}
 	}
@@ -151,16 +192,27 @@ func ParseChData(str string)(ChData, error){
 
 	d := ChData{}
 
-	freq, _ := strconv.ParseUint(str[6:8] + str[4:6] + str[2:4] + str[0:2], 16, 32)
-	fmode, _ := strconv.ParseUint(str[8:10], 16, 8)
-	fstep, _ := strconv.ParseUint(str[10:12], 16, 8)
-	name, _ := hex.DecodeString(string(str[86:145]))	// SJIS
-	name_utf8, _ := SJIStoUTF8(string(name))
-
+	chByte, _ := hex.DecodeString(str)
+	var freq uint32
+	buf := bytes.NewBuffer(chByte[0x00:0x04])
+	binary.Read(buf, binary.LittleEndian, &freq)
 	d.Freq = float64(freq)/1000000
-	d.Mode = int(fmode)
-	d.Step = int(fstep)
+	d.Mode = int(chByte[0x04])
+	d.Step = int(chByte[0x05])
+	d.OffsetStep = int(chByte[0x06])
+	name := string(chByte[0x2b:0x48])
+	name_utf8, _ := SJIStoUTF8(string(name))
 	d.Name = strings.TrimRight(name_utf8, "\x00")
+
+	var sfreq int32
+	buf_s := bytes.NewBuffer(chByte[0x48:0x4c])
+	binary.Read(buf_s, binary.LittleEndian, &sfreq)
+	d.ShiftFreq = float64(sfreq)/1000000
+	d.Att = int(chByte[0x4c])
+	d.Sq = int(chByte[0x4d])
+	d.Tone = int(chByte[0x4e])
+	d.DCS = int(chByte[0x4f])
+
 	return d, nil
 }
 
@@ -188,14 +240,20 @@ func MakeChData(dataOrg string, chData ChData) (string, error){
 
 	chByte[4] = byte(chData.Mode)
 	chByte[5] = byte(chData.Step)
+	// chByte[6] = byte(chData.OffsetStep)
+	// chByte[0x4c] = byte(chData.Att)
+	// chByte[0x4d] = byte(chData.Sq)
+	// chByte[0x4e] = byte(chData.Tone)
+	// chByte[0x4d] = byte(chData.DCS)
 
 	name_sjis, _ := UTF8toSJIS(chData.Name)
-	for i := 0; i < 29; i++ {
+	for i := 0; i < 28; i++ {
 		chByte[0x2b+i] = 0x00
 		if i < len(name_sjis) {
 			chByte[0x2b+i] = name_sjis[i]
 		}
 	}
+	chByte[0x47] = 0x00
 
 	return hex.EncodeToString(chByte), nil
 }
