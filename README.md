@@ -129,8 +129,8 @@ x100cmd export channels.csv
 
 ```:csv
 Channel,Freq,Mode,Step,Name
-1,433,FM,10k,430メイン
-2,145,FM,10k,144メイン
+001,433.000000,FM,10k,430メイン
+002,145.000000,FM,10k,144メイン
 ....
 ```
 
@@ -151,8 +151,8 @@ x100cmd import channels.csv
 
 ```:csv
 Channel,Freq,Mode,Step,Name
-1,433,FM,10k,430メイン
-2,145,FM,10k,144メイン
+001,433.000000,FM,10k,430メイン
+002,145.000000,FM,10k,144メイン
 ....
 ```
 
@@ -165,13 +165,13 @@ x100cmd exec sql 0  # SQL OFF
 x100cmd exec restart # 再起動
 ```
 
-| コマンド     | 説明                  |
-| ------------ | --------------------- |
-| freq \<freq> | 現在の周波数取得/設定 |
-| gps          | 本体の GPS 情報の取得 |
-| restart      | 再起動                |
-| sql \<level> | SQL 設定              |
-| vol \<level> | ボリューム設定        |
+| コマンド     | 説明                   |
+| ------------ | ---------------------- |
+| freq \<freq> | 現在の周波数取得/設定  |
+| gps          | 本体の GPS 情報の取得  |
+| restart      | 再起動                 |
+| sql \<level> | SQL 設定 (00-32)       |
+| vol \<level> | ボリューム設定 (00-32) |
 
 ## 制限事項など
 
