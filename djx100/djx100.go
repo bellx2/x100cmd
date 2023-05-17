@@ -27,9 +27,9 @@ type ChData struct {
 	Freq float64
 	Mode int
 	Step int
-	OffsetStep int
+	OffsetStep bool
 	Name string
-	ShiftFreq float64
+	ShiftFreq float32
 	Att int
 	Sq int
 	Tone int
@@ -39,7 +39,12 @@ func (d ChData) IsEmpty() bool {
 	return d.Freq == 0
 }
 func (d ChData) String() string {
-	return fmt.Sprintf(`{"freq":%f, "mode":"%s", "step":"%s", "name":"%s", "offset_step":%b, "shift_freq":"%f", "att":"%s", "sq":"%s", "tone":"%s", "DCS":"%s", "empty": %v}`, d.Freq, ChMode[d.Mode], ChStep[d.Step], d.Name, d.OffsetStep, d.ShiftFreq, ChAtt[d.Att], ChSq[d.Sq], ChTone[d.Tone], ChDCS[d.DCS], d.IsEmpty())
+	return fmt.Sprintf(`{"freq":%f, "mode":"%s", "step":"%s", "name":"%s", "offset_step":%t, "shift_freq":"%f", "att":"%s", "sq":"%s", "tone":"%s", "DCS":"%s", "empty": %v}`, d.Freq, ChMode[d.Mode], ChStep[d.Step], d.Name, d.OffsetStep, d.ShiftFreq, ChAtt[d.Att], ChSq[d.Sq], ChTone[d.Tone], ChDCS[d.DCS], d.IsEmpty())
+}
+
+func(d *ChData) SetName(name string){
+	n := strings.TrimRight(name, "\x00")
+	d.Name = n
 }
 
 var ChMode = []string{"FM", "NFM", "AM", "NAM", "T98", "T102_B54", "DMR", "T61_typ1", "T61_typ2","T61_typ3","T61_typ4","", "", "dPMR","DSTAR","C4FM","AIS","ACARS","POCSAG","12KIF_W","12KIF_N" }
@@ -199,15 +204,19 @@ func ParseChData(str string)(ChData, error){
 	d.Freq = float64(freq)/1000000
 	d.Mode = int(chByte[0x04])
 	d.Step = int(chByte[0x05])
-	d.OffsetStep = int(chByte[0x06])
+	if chByte[0x06] == 0x01 {
+		d.OffsetStep = true
+	}else{
+		d.OffsetStep = false
+	}
 	name := string(chByte[0x2b:0x48])
 	name_utf8, _ := SJIStoUTF8(string(name))
-	d.Name = strings.TrimRight(name_utf8, "\x00")
+	d.SetName(name_utf8) 
 
 	var sfreq int32
 	buf_s := bytes.NewBuffer(chByte[0x48:0x4c])
 	binary.Read(buf_s, binary.LittleEndian, &sfreq)
-	d.ShiftFreq = float64(sfreq)/1000000
+	d.ShiftFreq = float32(sfreq)/1000000
 	d.Att = int(chByte[0x4c])
 	d.Sq = int(chByte[0x4d])
 	d.Tone = int(chByte[0x4e])
@@ -228,23 +237,26 @@ func MakeChData(dataOrg string, chData ChData) (string, error){
 	chByte, _ := hex.DecodeString(dataOrg)
 
 	if (FreqMin < chData.Freq && chData.Freq < FreqMax){
-		w_freq := int(chData.Freq * 1000000)
-		w_freq_hex, _ := hex.DecodeString(fmt.Sprintf("%08X", w_freq))
-		// fmt.Printf("freq: %d\n", w_freq)
-		// fmt.Printf("freq_str: %x\n", w_freq_hex)
-		chByte[0] = w_freq_hex[3]
-		chByte[1] = w_freq_hex[2]
-		chByte[2] = w_freq_hex[1]
-		chByte[3] = w_freq_hex[0]			
+		buf := &bytes.Buffer{}
+		_ = binary.Write(buf, binary.LittleEndian, int32(chData.Freq * 1000000))
+		copy(chByte[0x00:0x04], buf.Bytes())	
 	}	
 
-	chByte[4] = byte(chData.Mode)
-	chByte[5] = byte(chData.Step)
-	// chByte[6] = byte(chData.OffsetStep)
-	// chByte[0x4c] = byte(chData.Att)
-	// chByte[0x4d] = byte(chData.Sq)
-	// chByte[0x4e] = byte(chData.Tone)
-	// chByte[0x4d] = byte(chData.DCS)
+	chByte[0x04] = byte(chData.Mode)
+	chByte[0x05] = byte(chData.Step)
+	if chData.OffsetStep {
+		chByte[0x06] = 0x01
+	}else{
+		chByte[0x06] = 0x00
+	}
+	chByte[0x4c] = byte(chData.Att)
+	chByte[0x4d] = byte(chData.Sq)
+	chByte[0x4e] = byte(chData.Tone)
+	chByte[0x4f] = byte(chData.DCS)
+
+	buf := &bytes.Buffer{}
+	_ = binary.Write(buf, binary.LittleEndian, int32(chData.ShiftFreq * 1000000))
+	copy(chByte[0x48:0x4c], buf.Bytes())
 
 	name_sjis, _ := UTF8toSJIS(chData.Name)
 	for i := 0; i < 28; i++ {
