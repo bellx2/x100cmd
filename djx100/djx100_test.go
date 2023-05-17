@@ -34,4 +34,17 @@ func TestSetAndParse(t *testing.T){
 			}
 		})
 	}
+
+	t.Run("Name Max Check", func(t *testing.T) {
+		d := ChData{Freq: 433.100, Mode: 0, Step: 0, Name: "1234567890123456789012345678901234567890", Att: 0, ShiftFreq: 0.0, OffsetStep: false, Sq: 0, Tone: 0, DCS: 0}
+		got, err := SetAndParse(d)
+		if err != nil {
+			t.Errorf("SetAndParse Error: %v", err)
+		}
+		if got.Name != d.Name[:28] {
+			t.Errorf("Name MisMatch\nSet:%v\nRes:%v", d.Name[:28], got.Name)
+		}else{
+			t.Logf("SetAndParse: %v", got.Name)
+		}
+	})
 }

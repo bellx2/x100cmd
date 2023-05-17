@@ -73,6 +73,59 @@ var writeCmd = &cobra.Command{
 			chData.Name = ""
 		}
 
+		ostep := cmd.Flag("offset").Value.String()
+		if (ostep != ""){
+			if (ostep == "ON"){
+				chData.OffsetStep = true
+			}else{
+				chData.OffsetStep = false
+			}
+		}
+
+		if (cmd.Flag("shift_freq").Value.String() != ""){
+			chData.ShiftFreq, _ = strconv.ParseFloat(cmd.Flag("shift_freq").Value.String(), 64)
+		}
+
+		att := cmd.Flag("att").Value.String()
+		if (att != ""){
+			chData.Att = djx100.ChAtt2Num(att)
+			if (chData.Att == -1){
+				err := fmt.Errorf("invalid att: %s", att)
+				fmt.Println(err)
+				os.Exit(1)
+			}
+		}
+
+		sq := cmd.Flag("sq").Value.String()
+		if (sq != ""){
+			chData.Sq = djx100.ChSq2Num(sq)
+			if (chData.Sq == -1){
+				err := fmt.Errorf("invalid sq: %s", sq)
+				fmt.Println(err)
+				os.Exit(1)
+			}
+		}
+
+		tone := cmd.Flag("tone").Value.String()
+		if (tone != ""){
+			chData.Tone = djx100.ChTone2Num(tone)
+			if (chData.Tone == -1){
+				err := fmt.Errorf("invalid tone: %s", tone)
+				fmt.Println(err)
+				os.Exit(1)
+			}
+		}
+		
+		dcs := cmd.Flag("dcs").Value.String()
+		if (dcs != ""){
+			chData.DCS = djx100.ChDCS2Num(dcs)
+			if (chData.DCS == -1){
+				err := fmt.Errorf("invalid dcs: %s", dcs)
+				fmt.Println(err)
+				os.Exit(1)
+			}
+		}
+
 		if chData.IsEmpty() {
 			err := fmt.Errorf("empty channel. freq Required")
 			fmt.Println(err)
@@ -126,5 +179,11 @@ func init() {
 	writeCmd.Flags().StringP("mode", "m", "", "Mode [FM,NFM,AM,NAM,T98,T102_B54...]")
 	writeCmd.Flags().StringP("step", "s", "", "Step [6k25,10k,12k5,20k .... ]")
 	writeCmd.Flags().StringP("name", "n", "", "Name")
+	writeCmd.Flags().String("shift_freq", "", "Shift Freqency")
+	writeCmd.Flags().String("offset", "", "OffestStep [ON,OFF]")
+	writeCmd.Flags().String("att", "", "ATT [OFF,10db,20db]")
+	writeCmd.Flags().String("sq", "", "Squelch [OFF,CTCSS,DCS,R_CTCSS,R_DCS,JR,MSK]")
+	writeCmd.Flags().String("tone", "", "CTCSS Tone [670,693...2503,2541]")
+	writeCmd.Flags().String("dcs", "", "DCS Code [017-754]")
 	writeCmd.Flags().BoolP("yes", "y", false, "Without Confirmation")
 }

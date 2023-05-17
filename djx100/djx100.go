@@ -26,7 +26,7 @@ type ChData struct {
 	Step int
 	OffsetStep bool
 	Name string
-	ShiftFreq float32
+	ShiftFreq float64
 	Att int
 	Sq int
 	Tone int
@@ -37,7 +37,7 @@ func (d ChData) IsEmpty() bool {
 	return d.Freq == 0
 }
 func (d ChData) String() string {
-	return fmt.Sprintf(`{"freq":%f, "mode":"%s", "step":"%s", "name":"%s", "offset_step":%t, "shift_freq":"%f", "att":"%s", "sq":"%s", "tone":"%s", "dcs":"%s", "bank":"%s", "empty": %v}`, d.Freq, ChMode[d.Mode], ChStep[d.Step], d.Name, d.OffsetStep, d.ShiftFreq, ChAtt[d.Att], ChSq[d.Sq], ChTone[d.Tone], ChDCS[d.DCS],d.Bank,d.IsEmpty())
+	return fmt.Sprintf(`{"freq":%f, "mode":"%s", "step":"%s", "name":"%s", "offset":"%s", "shift_freq":"%f", "att":"%s", "sq":"%s", "tone":"%s", "dcs":"%s", "bank":"%s", "empty": %v}`, d.Freq, ChMode[d.Mode], ChStep[d.Step], d.Name, ChOffsetStep2Str(d.OffsetStep), d.ShiftFreq, ChAtt[d.Att], ChSq[d.Sq], ChTone[d.Tone], ChDCS[d.DCS],d.Bank,d.IsEmpty())
 }
 
 func(d *ChData) SetName(name string){
@@ -65,6 +65,13 @@ func ChStep2Num(step string) (int){
 		}
 	}
 	return -1
+}
+
+func ChOffsetStep2Str(offset bool) (string){
+	if offset {
+		return "ON"
+	}
+	return "OFF"
 }
 
 var ChAtt = []string{"OFF","10db","20db"}
@@ -214,7 +221,7 @@ func ParseChData(str string)(ChData, error){
 	var sfreq int32
 	buf_s := bytes.NewBuffer(chByte[0x48:0x4c])
 	binary.Read(buf_s, binary.LittleEndian, &sfreq)
-	d.ShiftFreq = float32(sfreq)/1000000
+	d.ShiftFreq = float64(sfreq)/1000000
 	d.Att = int(chByte[0x4c])
 	d.Sq = int(chByte[0x4d])
 	d.Tone = int(chByte[0x4e])
