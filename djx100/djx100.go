@@ -20,9 +20,6 @@ import (
 	"golang.org/x/text/transform"
 )
 
-var FreqMin = 20.0
-var FreqMax = 470.0
-
 type ChData struct {
 	Freq float64
 	Mode int
@@ -34,12 +31,13 @@ type ChData struct {
 	Sq int
 	Tone int
 	DCS int
+	Bank string
 }
 func (d ChData) IsEmpty() bool {
 	return d.Freq == 0
 }
 func (d ChData) String() string {
-	return fmt.Sprintf(`{"freq":%f, "mode":"%s", "step":"%s", "name":"%s", "offset_step":%t, "shift_freq":"%f", "att":"%s", "sq":"%s", "tone":"%s", "DCS":"%s", "empty": %v}`, d.Freq, ChMode[d.Mode], ChStep[d.Step], d.Name, d.OffsetStep, d.ShiftFreq, ChAtt[d.Att], ChSq[d.Sq], ChTone[d.Tone], ChDCS[d.DCS], d.IsEmpty())
+	return fmt.Sprintf(`{"freq":%f, "mode":"%s", "step":"%s", "name":"%s", "offset_step":%t, "shift_freq":"%f", "att":"%s", "sq":"%s", "tone":"%s", "dcs":"%s", "bank":"%s", "empty": %v}`, d.Freq, ChMode[d.Mode], ChStep[d.Step], d.Name, d.OffsetStep, d.ShiftFreq, ChAtt[d.Att], ChSq[d.Sq], ChTone[d.Tone], ChDCS[d.DCS],d.Bank,d.IsEmpty())
 }
 
 func(d *ChData) SetName(name string){
@@ -222,6 +220,14 @@ func ParseChData(str string)(ChData, error){
 	d.Tone = int(chByte[0x4e])
 	d.DCS = int(chByte[0x4f])
 
+	bank_str := ""
+	for i, v := range chByte[0x11:0x2B] {
+		if(int(v) == 1){
+			bank_str += fmt.Sprintf("%c", 0x41+i)
+		}
+	}
+	d.Bank = bank_str
+
 	return d, nil
 }
 
@@ -236,11 +242,9 @@ func MakeChData(dataOrg string, chData ChData) (string, error){
 	}
 	chByte, _ := hex.DecodeString(dataOrg)
 
-	if (FreqMin < chData.Freq && chData.Freq < FreqMax){
-		buf := &bytes.Buffer{}
-		_ = binary.Write(buf, binary.LittleEndian, int32(chData.Freq * 1000000))
-		copy(chByte[0x00:0x04], buf.Bytes())	
-	}	
+	buf := &bytes.Buffer{}
+	_ = binary.Write(buf, binary.LittleEndian, int32(chData.Freq * 1000000))
+	copy(chByte[0x00:0x04], buf.Bytes())	
 
 	chByte[0x04] = byte(chData.Mode)
 	chByte[0x05] = byte(chData.Step)
@@ -254,9 +258,9 @@ func MakeChData(dataOrg string, chData ChData) (string, error){
 	chByte[0x4e] = byte(chData.Tone)
 	chByte[0x4f] = byte(chData.DCS)
 
-	buf := &bytes.Buffer{}
-	_ = binary.Write(buf, binary.LittleEndian, int32(chData.ShiftFreq * 1000000))
-	copy(chByte[0x48:0x4c], buf.Bytes())
+	buf_s := &bytes.Buffer{}
+	_ = binary.Write(buf_s, binary.LittleEndian, int32(chData.ShiftFreq * 1000000))
+	copy(chByte[0x48:0x4c], buf_s.Bytes())
 
 	name_sjis, _ := UTF8toSJIS(chData.Name)
 	for i := 0; i < 28; i++ {
@@ -266,6 +270,10 @@ func MakeChData(dataOrg string, chData ChData) (string, error){
 		}
 	}
 	chByte[0x47] = 0x00
+
+	for _, v := range chData.Bank {
+		chByte[0x11+(v-0x41)] = byte(0x01)
+	}
 
 	return hex.EncodeToString(chByte), nil
 }
