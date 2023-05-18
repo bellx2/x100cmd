@@ -150,7 +150,7 @@ func GetPortName(portName string) (string, error) {
 			return port.Name, nil
 		}
 	}
-	return "", errors.New("DJ-X100 is not found")
+	return "", errors.New("DJ-X100 not found")
 }
 
 // シリアルポート接続
