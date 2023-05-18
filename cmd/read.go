@@ -15,7 +15,7 @@ import (
 
 // readCmd represents the read command
 var readCmd = &cobra.Command{
-	Use:   "read <channel>",
+	Use:   "read <channel_no>",
 	Short: "Read Channel Data",
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
@@ -45,5 +45,6 @@ var readCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(readCmd)
+	chCmd.AddCommand(readCmd)
 	readCmd.Flags().BoolP("debug", "d", false, "Show Debug Mode")
 }

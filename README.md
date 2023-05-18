@@ -36,11 +36,12 @@ x100cmd exec restart
 コマンド一覧:
 
 - [`check`] - シリアルポートと接続確認
-- [`read`] - チャンネルデータ読み込み
-- [`write`] - チャンネルデータ書き込み
-- [`clear`] - チャンネルデータクリア
-- [`export`] - チャンネルデータのファイル出力
-- [`import`] - チャンネルデータのファイル読み込み
+- [`ch`] - チャンネルコマンド（省略可）
+  - [`read`] - チャンネルデータ読み込み
+  - [`write`] - チャンネルデータ書き込み
+  - [`clear`] - チャンネルデータクリア
+  - [`export`] - チャンネルデータのファイル出力
+  - [`import`] - チャンネルデータのファイル読み込み
 - [`exec`] - 制御コマンド実行
 
 | グローバルフラグ | デフォルト | 説明                                               |
@@ -71,7 +72,7 @@ OK
 433.000000
 ```
 
-### `x100cmd read <channel>`
+### `x100cmd read <channel_no>`<br/>`x100cmd ch read <channel_no>`
 
 チャンネルデータを読み込みます。
 
@@ -81,7 +82,7 @@ x100cmd read 10
 {"freq":433.000000, "mode":"FM", "step":"20k", "name":"430メイン", "empty": false}
 ```
 
-### `x100cmd write <channel>`
+### `x100cmd write <channel>`<br/>`x100cmd ch write <channel_no>`
 
 チャンネルデータを書き込みます。指定したチャンネルのデータは再起動するまで反映されません。指定したデータ以外（コード等）は指定チャンネルの情報が保持されます。`-r`オプションを付けると書き込み後に再起動を行います。
 
@@ -89,18 +90,25 @@ x100cmd read 10
 x100cmd write 10 -f 433.00 -m FM -n "430メイン" -s "20k" -r
 ```
 
-| フラグ            | 初期値 | 説明                                                                                                                                                                                   |
+※ 指定しない場合は現状のチャンネル設定を保持します
+| フラグ | 初期値 | 説明 |
 | ----------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `-f`, `--freq`    | NULL   | 周波数 (e.g. 433.0)                                                                                                                                                                    |
-| `-m`, `--mode`    | FM     | モード: FM, NFM, AM, NAM, T98 , T102_B54, DMR, T61_typ1, T61_typ2, T61_typ3, T61_typ4, dPMR,DSTAR, C4FM, AIS, ACARS, POCSAG, 12KIF_W, 12KIF_N <br />※対応してないモードは表示されない? |
-| `-s`, `--step`    | 1k     | 周波数ステップ: 1k, 5k, 6k25, 8k33, 10k, 12k5,15k, 20k, 25k, 30k, 50k, 100k, 125k,200k                                                                                                 |
-| `-n`, `--name`    | NULL   | 名称 (UTF-8) 最大: 30byte, NONE で空白                                                                                                                                                 |
-| `-y`, `--yes`     | false  | 書き込み確認をしない                                                                                                                                                                   |
-| `-r`, `--restart` | false  | 実行後再起動                                                                                                                                                                           |
+| `-f`, `--freq` | | 周波数 (e.g. 433.0) |
+| `-m`, `--mode` | | モード: FM, NFM, AM, NAM, T98 , T102_B54, DMR, T61_typ1, T61_typ2, T61_typ3, T61_typ4, dPMR,DSTAR, C4FM, AIS, ACARS, POCSAG, 12KIF_W, 12KIF_N <br />※対応してないモードは表示されない? |
+| `-s`, `--step` | | 周波数ステップ: 1k, 5k, 6k25, 8k33, 10k, 12k5,15k, 20k, 25k, 30k, 50k, 100k, 125k,200k |
+| `-n`, `--name` | | 名称 (UTF-8) 最大: 30byte, NONE で空白 |
+| `--shift_freq` | | シフト周波数 |
+| `--offset` | | オフセット : ON, OFF |
+| `--att` | | アッテネータ: OFF, 10db, 20db |
+| `--sq` | | スケルチ: OFF,CTCSS,DCS,R_CTCSS,R_DCS,JR,MSK |
+| `--tone` | | CTSS トーン: 670,693...2503,2541 |
+| `--dcs` | | DCS コード: 017-754 |
+| `-y`, `--yes` | false | 書き込み確認をしない |
+| `-r`, `--restart` | false | 実行後再起動 |
 
-### `x100cmd clear <channel>`
+### `x100cmd clear <channel_no>`<br/>`x100cmd ch clear <channel_no>`
 
-チャンネルデータを消去します。
+チャンネルデータを初期データで消去します。
 
 ```sh
 x100cmd clear 10
@@ -112,9 +120,9 @@ OK
 | `-y`, `--yes`     | false  | 消去確認をしない |
 | `-r`, `--restart` | false  | 実行後再起動     |
 
-### `x100cmd export <csv_filename>`
+### `x100cmd export <csv_filename>`<br/>`x100cmd ch export <csv_filename>`
 
-チャンネルデータをエクスポートします。
+チャンネルデータ(1-999)をエクスポートします。
 フォーマットはカンマ区切りの CSV (UTF-8 BOM 付き)です。
 
 ```sh
@@ -134,7 +142,7 @@ Channel,Freq,Mode,Step,Name
 ....
 ```
 
-### `x100cmd import <csv_filename>`
+### `x100cmd import <csv_filename>`<br/>`x100cmd ch import <csv_filename>`
 
 チャンネルデータをインポートします。フォーマットはカンマ区切りの CSV (UTF-8 BOM 付き)です。
 Export したデータを基準にしてください。

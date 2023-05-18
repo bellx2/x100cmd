@@ -5,7 +5,6 @@ go 1.20
 require (
 	github.com/cheggaaa/pb/v3 v3.1.2
 	github.com/manifoldco/promptui v0.9.0
-	github.com/rs/zerolog v1.29.1
 	github.com/spf13/cobra v1.7.0
 	go.bug.st/serial v1.5.0
 	golang.org/x/text v0.9.0

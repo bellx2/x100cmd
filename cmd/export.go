@@ -66,5 +66,6 @@ var exportCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(exportCmd)
+	chCmd.AddCommand(exportCmd)
 	exportCmd.Flags().BoolP("all", "a", false, "Output All Channels")
 }

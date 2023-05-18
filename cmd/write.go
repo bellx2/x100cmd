@@ -17,7 +17,7 @@ import (
 // writeCmd represents the write command
 
 var writeCmd = &cobra.Command{
-	Use:   "write <channel>",
+	Use:   "write <channel_no>",
 	Short: "Write Channel Data",
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
@@ -173,6 +173,7 @@ var writeCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(writeCmd)
+	chCmd.AddCommand(writeCmd)
 
 	writeCmd.Flags().BoolP("restart", "r", false, "Send Restart Command")
 	writeCmd.Flags().Float32P("freq", "f", 0, "Freqency")

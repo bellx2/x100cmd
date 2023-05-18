@@ -1,6 +1,7 @@
 /*
-Copyright © 2023 NAME HERE <EMAIL ADDRESS>
+Copyright © 2023 Ryu Tanabe <bellx2@gmali.com>
 */
+
 package cmd
 
 import (
@@ -126,5 +127,6 @@ var importCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(importCmd)
+	chCmd.AddCommand(importCmd)
 	importCmd.Flags().BoolP("restart", "r", false, "Send Restart Command")
 }

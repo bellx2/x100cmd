@@ -52,6 +52,7 @@ var clearCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(clearCmd)
+	chCmd.AddCommand(clearCmd)
 	clearCmd.Flags().BoolP("yes", "y", false, "Without Confirmation")
 	clearCmd.Flags().BoolP("restart", "r", false, "Send Restart Command")
 }
