@@ -101,6 +101,71 @@ var importCmd = &cobra.Command{
 				chData.Name = ""
 			}
 
+			if len(record) > 5 {
+
+				offset := record[5]
+				if (offset != ""){
+					if (offset == "OFF"){
+						chData.OffsetStep = false
+					}else if (offset == "ON"){
+						chData.OffsetStep = true
+					}
+				}
+
+				shift_freq, _ := strconv.ParseFloat(record[6], 64)
+				if (shift_freq != 0){
+					chData.ShiftFreq = shift_freq
+				}
+
+				att := record[7]
+				if (att != ""){
+					chData.Att = djx100.ChAtt2Num(att)
+					if (chData.Att == -1){
+						err := fmt.Errorf("invalid att: %s", att)
+						fmt.Println(ch, err)
+						continue
+					}
+				}
+
+				sq := record[8]
+				if (sq != ""){
+					chData.Sq = djx100.ChSq2Num(sq)
+					if (chData.Sq == -1){
+						err := fmt.Errorf("invalid sq: %s", sq)
+						fmt.Println(ch, err)
+						continue
+					}
+				}
+
+				tone := record[9]
+				if (tone != ""){
+					chData.Tone = djx100.ChTone2Num(tone)
+					if (chData.Tone == -1){
+						err := fmt.Errorf("invalid tone: %s", tone)
+						fmt.Println(ch, err)
+						continue
+					}
+				}
+
+				dcs := record[10]
+				if (dcs != ""){
+					chData.DCS = djx100.ChDCS2Num(dcs)
+					if (chData.DCS == -1){
+						err := fmt.Errorf("invalid dcs: %s", dcs)
+						fmt.Println(ch, err)
+						continue
+					}
+				}
+
+				bank := record[11]
+				if (bank != ""){
+					chData.Bank = bank
+					if bank == "NONE" {
+						chData.Bank = ""
+					}
+				}
+			}
+
 			newData, err:= djx100.MakeChData(data, chData)
 			if err != nil {
 				fmt.Println(ch, err)

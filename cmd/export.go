@@ -37,7 +37,7 @@ var exportCmd = &cobra.Command{
 		file.Write(bomUtf8)
 
 		w := csv.NewWriter(file)
-		w.Write([]string{"Channel","Freq","Mode","Step","Name"})
+		w.Write([]string{"Channel","Freq","Mode","Step","Name","offset","shift_freq","att","sq","tone","dcs","bank"})
 
 		bar := pb.StartNew(999)
 		bar.SetMaxWidth(80)
@@ -56,7 +56,7 @@ var exportCmd = &cobra.Command{
 				bar.Increment()
 				continue
 			}
-			w.Write([]string{fmt.Sprintf("%03d",ch), fmt.Sprintf("%.6f",chData.Freq), djx100.ChMode[chData.Mode], djx100.ChStep[chData.Step], chData.Name})
+			w.Write([]string{fmt.Sprintf("%03d",ch), fmt.Sprintf("%.6f",chData.Freq), djx100.ChMode[chData.Mode], djx100.ChStep[chData.Step], chData.Name, djx100.ChOffsetStep2Str(chData.OffsetStep), fmt.Sprintf("%.6f",chData.ShiftFreq), djx100.ChAtt[chData.Att], djx100.ChSq[chData.Sq], djx100.ChTone[chData.Tone], djx100.ChDCS[chData.DCS], chData.Bank})
 			bar.Increment()
 		}
 		bar.Finish()

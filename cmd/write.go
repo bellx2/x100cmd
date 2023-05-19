@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/bellx2/x100cmd/djx100"
 	"github.com/manifoldco/promptui"
@@ -126,6 +127,11 @@ var writeCmd = &cobra.Command{
 			}
 		}
 
+		bank := cmd.Flag("bank").Value.String()
+		if (bank != ""){
+			chData.Bank = strings.ToUpper(bank)
+		}
+
 		if chData.IsEmpty() {
 			err := fmt.Errorf("empty channel. freq Required")
 			fmt.Println(err)
@@ -175,7 +181,6 @@ func init() {
 	rootCmd.AddCommand(writeCmd)
 	chCmd.AddCommand(writeCmd)
 
-	writeCmd.Flags().BoolP("restart", "r", false, "Send Restart Command")
 	writeCmd.Flags().Float32P("freq", "f", 0, "Freqency")
 	writeCmd.Flags().StringP("mode", "m", "", "Mode [FM,NFM,AM,NAM,T98,T102_B54...]")
 	writeCmd.Flags().StringP("step", "s", "", "Step [6k25,10k,12k5,20k .... ]")
@@ -186,5 +191,7 @@ func init() {
 	writeCmd.Flags().String("sq", "", "Squelch [OFF,CTCSS,DCS,R_CTCSS,R_DCS,JR,MSK]")
 	writeCmd.Flags().String("tone", "", "CTCSS Tone [670,693...2503,2541]")
 	writeCmd.Flags().String("dcs", "", "DCS Code [017-754]")
+	writeCmd.Flags().String("bank", "", "Bank [A-Z] ex. ABCDEZ")
 	writeCmd.Flags().BoolP("yes", "y", false, "Without Confirmation")
+	writeCmd.Flags().BoolP("restart", "r", false, "Restart")
 }
