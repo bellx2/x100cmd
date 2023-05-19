@@ -130,6 +130,9 @@ var writeCmd = &cobra.Command{
 		bank := cmd.Flag("bank").Value.String()
 		if (bank != ""){
 			chData.Bank = strings.ToUpper(bank)
+			if (bank == "NONE"){
+				chData.Bank = ""
+			}
 		}
 
 		if chData.IsEmpty() {

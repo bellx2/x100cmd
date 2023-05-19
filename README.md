@@ -110,6 +110,7 @@ x100cmd write 10 -f 433.00 -m FM -n "430メイン" -s "20k" -r
 | `--sq` | | スケルチ: OFF,CTCSS,DCS,R_CTCSS,R_DCS,JR,MSK |
 | `--tone` | | CTSS トーン: 670,693...2503,2541 |
 | `--dcs` | | DCS コード: 017-754 |
+| `--bank` | | バンク: A-Z ex. `ABCZ` のように複数指定可。`NONE`で消去|
 | `-y`, `--yes` | false | 書き込み確認をしない |
 | `-r`, `--restart` | false | 実行後再起動 |
 
