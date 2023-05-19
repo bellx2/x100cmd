@@ -278,16 +278,21 @@ func MakeChData(dataOrg string, chData ChData) (string, error){
       if i == max_size-1 && SJISMultiCheck(name_sjis[i]){ // 最後がマルチバイトの場合は0埋め
         chByte[0x2b+i] = 0x00
       }
-    }
-    if SJISMultiCheck(chByte[0x00+i]) { //マルチバイトの場合はもう一文字進める
-      i++
-      chByte[0x2b+i] = name_sjis[i]
-    }
+			if SJISMultiCheck(chByte[0x00+i]) { //マルチバイトの場合はもう一文字進める
+				i++
+				chByte[0x2b+i] = name_sjis[i]
+			}
+		}
   }
   chByte[0x2b+max_size] = 0x00  //最終0埋め
 
-	for _, v := range chData.Bank {
-		chByte[0x11+(v-0x41)] = byte(0x01)
+	for i := 0; i < 26; i++ {
+		chByte[0x11+i] = 0x00
+	}
+	for _, v := range strings.ToUpper(chData.Bank) {
+		if 0x41 <= v && v <= 0x5a {
+			chByte[0x11+(v-0x41)] = byte(0x01)
+		}
 	}
 
 	return hex.EncodeToString(chByte), nil
@@ -303,6 +308,84 @@ func WriteChData(port serial.Port, ch int, data string) (string, error){
 		return "", errors.New("write Command Error")
 	}
 	return str, nil
+}
+
+// バンクデータ読み込み
+func ReadBankData(port serial.Port) (string, error){
+	str0, err := SendCmd(port, fmt.Sprintf("AL~F%05xM",0x0A600))
+	if err != nil {
+		return "", errors.New("read Command Error")
+	}
+	str1, err := SendCmd(port, fmt.Sprintf("AL~F%05xM",0x0A700))
+	if err != nil {
+		return "", errors.New("read Command Error")
+	}
+	return str0+str1, nil
+}
+
+// バンクデータ書き込み
+func WriteBankData(port serial.Port, data string) (string, error){
+	str0, err := SendCmd(port, fmt.Sprintf("AL~F%05xW"+data[0:0x200],0x0A600))
+	// fmt.Println(data[0:0x200])
+	if err != nil {
+		return "", errors.New("write Command Error")
+	}
+	str1, err := SendCmd(port, fmt.Sprintf("AL~F%05xW"+data[0x200:0x400],0x0A700))
+	// fmt.Println(data[0x200:0x400])
+	if err != nil {
+		return "", errors.New("write Command Error")
+	}
+	if (str0 != "OK" || str1 != "OK"){
+		return "", errors.New("write Command Error")
+	}
+	return "OK", nil
+}
+
+// バンクデータ解析
+func ParseBankName(str string, b string)(string, error){
+	d, _ := hex.DecodeString(str)
+	var BkData[26] string
+	for i:=0; i<26; i++{
+		s, _ := SJIStoUTF8(string(d[i*0x10:(i+1)*0x10]))
+		BkData[i] = s
+	}
+	alpla := "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	for i, v := range alpla {
+		if string(v) == b {
+			return BkData[i], nil
+		}
+	}
+	return "", errors.New("invalid bank name")
+}
+
+// バンクデータ挿入
+func SetBankName(str string, b string, n string)(string, error){
+	alpla := "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	idx := strings.Index(alpla, strings.ToUpper(b))
+	if idx == -1 {
+		return "", errors.New("invalid bank name")
+	}else{
+		idx = idx -1
+	}
+	chByte, _ := hex.DecodeString(str)
+	name_sjis, _ := UTF8toSJIS(n)
+	max_size := 14
+  for i := 0; i < max_size; i++ {
+    chByte[idx*0x10 + 0x10 + i] = 0x00
+    if i < len(name_sjis) {
+      chByte[idx*0x10 + 0x10 + i] = name_sjis[i]
+      if i == max_size-1 && SJISMultiCheck(name_sjis[i]){ // 最後がマルチバイトの場合は0埋め
+        chByte[idx*0x10 + 0x10 + i] = 0x00
+      }
+    	if SJISMultiCheck(name_sjis[i]) { //マルチバイトの場合はもう一文字進める
+      	i++
+    		chByte[idx*0x10 + 0x10 + i] = name_sjis[i]
+   		}
+		}
+  }
+  chByte[idx*0x10 + 0x10 +max_size] = 0x00  //最終0埋め
+
+	return hex.EncodeToString(chByte), nil
 }
 
 // コマンド送信

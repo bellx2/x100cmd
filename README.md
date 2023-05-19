@@ -37,11 +37,18 @@ x100cmd exec restart
 
 - [`check`] - シリアルポートと接続確認
 - [`ch`] - チャンネルコマンド（省略可）
+
   - [`read`] - チャンネルデータ読み込み
   - [`write`] - チャンネルデータ書き込み
   - [`clear`] - チャンネルデータクリア
   - [`export`] - チャンネルデータのファイル出力
   - [`import`] - チャンネルデータのファイル読み込み
+
+- [`bank`] - バンクコマンド
+
+  - [`read`] - バンク名読み込み
+  - [`write`] - バンク名書き込み
+
 - [`exec`] - 制御コマンド実行
 
 | グローバルフラグ | デフォルト | 説明                                               |
@@ -79,7 +86,7 @@ OK
 ```sh
 x100cmd read 10
 
-{"freq":433.000000, "mode":"FM", "step":"20k", "name":"430メイン", "empty": false}
+{"freq":433.000000, "mode":"FM", "step":"1k", "name":"430メイン", "offset":"OFF", "shift_freq":"0.000000", "att":"OFF", "sq":"OFF", "tone":"670", "dcs":"017", "bank":"ABCTYZ", "empty": false}
 ```
 
 ### `x100cmd write <channel>`<br/>`x100cmd ch write <channel_no>`
@@ -136,9 +143,9 @@ x100cmd export channels.csv
 #### ファイル形式
 
 ```:csv
-Channel,Freq,Mode,Step,Name
-001,433.000000,FM,10k,430メイン
-002,145.000000,FM,10k,144メイン
+Channel,Freq,Mode,Step,Name,offset,shift_freq,att,sq,tone,dcs,bank
+001,433.000000,FM,10k,430メイン,OFF,0.000000,OFF,OFF,670,017,A
+002,145.000000,FM,10k,144メイン,OFF,0.000000,OFF,OFF,670,017,Z
 ....
 ```
 
@@ -150,6 +157,7 @@ Export したデータを基準にしてください。
 - 指定したもの以外のデータは保持されます。
 - 周波数が０の場合はチャンネルデータを消去します。
 - ヘッダー行が異なるとインポートできません
+- ５項目のみの(v1.2 系)のデータも読み込み可能です
 
 ```sh
 x100cmd import channels.csv
@@ -163,6 +171,39 @@ Channel,Freq,Mode,Step,Name
 002,145.000000,FM,10k,144メイン
 ....
 ```
+
+```:csv
+Channel,Freq,Mode,Step,Name,offset,shift_freq,att,sq,tone,dcs,bank
+001,433.000000,FM,10k,430メイン,OFF,0.000000,OFF,OFF,670,017,A
+002,145.000000,FM,10k,144メイン,OFF,0.000000,OFF,OFF,670,017,Z
+```
+
+### `x100cmd bank read <A-Z>`
+
+バンク名を読み込みます。バンクは A-Z で指定します。省略した場合はすべてのバンクを出力します
+
+```sh
+x100cmd bank read A
+"A","羽田空港"
+
+x100cmd bank read ABC
+"A","羽田空港"
+"B","成田空港"
+"C","横田基地"
+```
+
+### `x100cmd bank write <A-Z> <bank_name>`
+
+バンク名を書き込みます。バンクは A-Z で指定します。再起動するまで反映されません。`-r`オプションを付けると書き込み後に再起動を行います。名称に`NONE`を指定すると名称を消去します（表示は`バンク-A~Z`となります）。
+
+```sh
+x100cmd bank write A "羽田空港" -r
+```
+
+| フラグ            | 初期値 | 説明               |
+| ----------------- | ------ | ------------------ |
+| `-y`, `--yes`     | false  | 上書き確認をしない |
+| `-r`, `--restart` | false  | 実行後再起動       |
 
 ### `x100cmd exec <command>`
 
