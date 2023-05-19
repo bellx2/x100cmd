@@ -36,15 +36,30 @@ func TestSetAndParse(t *testing.T){
 	}
 
 	t.Run("Name Max Check", func(t *testing.T) {
-		d := ChData{Freq: 433.100, Mode: 0, Step: 0, Name: "1234567890123456789012345678901234567890", Att: 0, ShiftFreq: 0.0, OffsetStep: false, Sq: 0, Tone: 0, DCS: 0}
-		got, err := SetAndParse(d)
-		if err != nil {
-			t.Errorf("SetAndParse Error: %v", err)
-		}
-		if got.Name != d.Name[:28] {
-			t.Errorf("Name MisMatch\nSet:%v\nRes:%v", d.Name[:28], got.Name)
-		}else{
-			t.Logf("SetAndParse: %v", got.Name)
+
+		m := map[string]string{}
+		m["0123456789012345678901234567890123"] = "0123456789012345678901234567"
+		m["アイウエオかきくけこさしすせそ"] = "アイウエオかきくけこさしすせ"
+		m["0アイウエオかきくけこさしすせそ"] = "0アイウエオかきくけこさしす"
+		m["0アイウエオかきくけこさしす0せそ"] = "0アイウエオかきくけこさしす0"
+
+		for k, v := range m {
+			d := ChData{Freq: 433.100, Mode: 0, Step: 0, Name: k, Att: 0, ShiftFreq: 0.0, OffsetStep: false, Sq: 0, Tone: 0, DCS: 0}
+			d_res := d
+			d_res.Name = v
+			got, err := SetAndParse(d)
+			if err != nil {
+				t.Errorf("SetAndParse Error: %v", err)
+			}
+			if got.String() != d_res.String() {	//他のパラメータ含めて比較
+				if got.Name != d_res.Name {
+					t.Errorf("Name Error %s -> %s \n", d_res.Name, got.Name)
+				}else{
+					t.Errorf("Data Error %s -> %s \n", d_res.String(), got.String())
+				}
+			}else{
+				t.Logf("SetAndParse: %s -> %s", k, got.Name)
+			}
 		}
 	})
 }

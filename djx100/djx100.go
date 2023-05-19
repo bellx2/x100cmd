@@ -270,13 +270,21 @@ func MakeChData(dataOrg string, chData ChData) (string, error){
 	copy(chByte[0x48:0x4c], buf_s.Bytes())
 
 	name_sjis, _ := UTF8toSJIS(chData.Name)
-	for i := 0; i < 28; i++ {
-		chByte[0x2b+i] = 0x00
-		if i < len(name_sjis) {
-			chByte[0x2b+i] = name_sjis[i]
-		}
-	}
-	chByte[0x47] = 0x00
+	max_size := 28
+  for i := 0; i < max_size; i++ {
+    chByte[0x2b+i] = 0x00
+    if i < len(name_sjis) {
+      chByte[0x2b+i] = name_sjis[i]
+      if i == max_size-1 && SJISMultiCheck(name_sjis[i]){ // 最後がマルチバイトの場合は0埋め
+        chByte[0x2b+i] = 0x00
+      }
+    }
+    if SJISMultiCheck(chByte[0x00+i]) { //マルチバイトの場合はもう一文字進める
+      i++
+      chByte[0x2b+i] = name_sjis[i]
+    }
+  }
+  chByte[0x2b+max_size] = 0x00  //最終0埋め
 
 	for _, v := range chData.Bank {
 		chByte[0x11+(v-0x41)] = byte(0x01)
@@ -339,3 +347,12 @@ func SJIStoUTF8(str string) (string, error) {
 	}
 	return string(ret), err
 }
+
+// http://www5f.biglobe.ne.jp/~fuku-labo/library/program/cpp/2/076.htm
+// ShiftJISのマルチバイト判定（１文字目）
+func SJISMultiCheck(b byte) bool {
+  if(((b>=0x81)&&(b<=0x9f))||((b>=0xe0)&&(b<=0xfc))){
+    return true;
+  }
+  return false;
+} 
