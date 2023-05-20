@@ -135,12 +135,39 @@ var writeCmd = &cobra.Command{
 			}
 		}
 
+		skip := cmd.Flag("skip").Value.String()
+		if (skip != ""){
+			if (skip == "ON"){
+				chData.Skip = true
+			}else{
+				chData.Skip = false
+			}
+		}
+
+		if (cmd.Flag("lon").Value.String() != ""){
+			chData.Lon, _ = strconv.ParseFloat(cmd.Flag("lon").Value.String(), 64)
+		}
+
+		if (cmd.Flag("lat").Value.String() != ""){
+			chData.Lat, _ = strconv.ParseFloat(cmd.Flag("lat").Value.String(), 64)
+		}
+
+		ext := cmd.Flag("ext").Value.String()
+		if (ext != ""){
+			if(len(ext) != 96){
+				err := fmt.Errorf("invalid ext (96chars): %s", ext)
+				fmt.Println(err)
+				os.Exit(1)
+			}
+			chData.Ext = ext
+		}
+
 		if chData.IsEmpty() {
 			err := fmt.Errorf("empty channel. freq Required")
 			fmt.Println(err)
 			os.Exit(1)
 		}
-
+		
 		newData, err:= djx100.MakeChData(data, chData)
 		if err != nil {
 			fmt.Println(err)
@@ -195,6 +222,10 @@ func init() {
 	writeCmd.Flags().String("tone", "", "CTCSS Tone [670,693...2503,2541]")
 	writeCmd.Flags().String("dcs", "", "DCS Code [017-754]")
 	writeCmd.Flags().String("bank", "", "Bank [A-Z] ex. ABCDEZ")
+	writeCmd.Flags().String("skip", "", "Skip [ON,OFF]")
+	writeCmd.Flags().String("lat", "", "Latitude")
+	writeCmd.Flags().String("lon", "", "Longitude")
+	writeCmd.Flags().String("ext", "", "ExtData(0x50-0x7F) 96chars")
 	writeCmd.Flags().BoolP("yes", "y", false, "Without Confirmation")
 	writeCmd.Flags().BoolP("restart", "r", false, "Restart")
 }

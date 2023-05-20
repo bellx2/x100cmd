@@ -8,8 +8,8 @@
 
 ## :beginner: 使い方
 
-- [Homebrew](https://brew.sh/index_ja)がインストールされていれば`brew install bellx2/tap/x100cmd`でインストールできます。
-- ビルド済みバイナリーを[Releases](https://github.com/bellx2/x100cmd/releases/)よりダウンロードし任意の場所に置くか、ソースからのビルドも可能です。
+- macos の場合[Homebrew](https://brew.sh/index_ja)がインストール済みであれば`brew install bellx2/tap/x100cmd`でインストール可能です。アップデートは`brew upgrade x100cmd`で行えます。
+- Windows/macos 用のビルド済みバイナリーは[Releases](https://github.com/bellx2/x100cmd/releases/)よりダウンロードできます。任意の場所に置いて実行してください。
 - [DJ-X100](https://www.alinco.co.jp/product/electron/detail/djx100.html) を USB ケーブルで接続します。
 
 `read` コマンドを使って指定チャンネルのデータを読み込み表示します。ポートは自動認識します。
@@ -104,13 +104,17 @@ x100cmd write 10 -f 433.00 -m FM -n "430メイン" -s "20k" -r
 | `-m`, `--mode` | | モード: FM, NFM, AM, NAM, T98 , T102_B54, DMR, T61_typ1, T61_typ2, T61_typ3, T61_typ4, dPMR,DSTAR, C4FM, AIS, ACARS, POCSAG, 12KIF_W, 12KIF_N <br />※対応してないモードは表示されない? |
 | `-s`, `--step` | | 周波数ステップ: 1k, 5k, 6k25, 8k33, 10k, 12k5,15k, 20k, 25k, 30k, 50k, 100k, 125k,200k |
 | `-n`, `--name` | | 名称 (UTF-8) 最大: 30byte, NONE で空白 |
-| `--shift_freq` | | シフト周波数 |
 | `--offset` | | オフセット : ON, OFF |
+| `--shift_freq` | | シフト周波数 |
 | `--att` | | アッテネータ: OFF, 10db, 20db |
 | `--sq` | | スケルチ: OFF,CTCSS,DCS,R_CTCSS,R_DCS,JR,MSK |
 | `--tone` | | CTSS トーン: 670,693...2503,2541 |
 | `--dcs` | | DCS コード: 017-754 |
 | `--bank` | | バンク: A-Z ex. `ABCZ` のように複数指定可。`NONE`で消去|
+| `--skip` | | メモリースキップ: ON, OFF|
+| `--lat` | | 緯度 ex.35.681382 ※緯度経度=0 で消去|
+| `--lon` | | 経度 ex.139.766084 ※緯度経度=0 で消去|
+| `--ext` | | 拡張情報(0x50-0x7F) 半角 96 文字 |
 | `-y`, `--yes` | false | 書き込み確認をしない |
 | `-r`, `--restart` | false | 実行後再起動 |
 

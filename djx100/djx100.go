@@ -32,12 +32,19 @@ type ChData struct {
 	Tone int
 	DCS int
 	Bank string
+	Lat float64
+	Lon float64
+	Skip bool
+	Ext string
 }
 func (d ChData) IsEmpty() bool {
 	return d.Freq == 0
 }
 func (d ChData) String() string {
-	return fmt.Sprintf(`{"freq":%f, "mode":"%s", "step":"%s", "name":"%s", "offset":"%s", "shift_freq":"%f", "att":"%s", "sq":"%s", "tone":"%s", "dcs":"%s", "bank":"%s", "empty": %v}`, d.Freq, ChMode[d.Mode], ChStep[d.Step], d.Name, ChOffsetStep2Str(d.OffsetStep), d.ShiftFreq, ChAtt[d.Att], ChSq[d.Sq], ChTone[d.Tone], ChDCS[d.DCS],d.Bank,d.IsEmpty())
+	return fmt.Sprintf(`{"freq":%f, "mode":"%s", "step":"%s", "name":"%s", "offset":"%s", "shift_freq":"%f", "att":"%s", "sq":"%s", "tone":"%s", "dcs":"%s", "bank":"%s", "lat":%f, "lon":%f, "skip":%t, "ext":"%s", "empty": %v }`, d.Freq, ChMode[d.Mode], ChStep[d.Step], d.Name, ChOffsetStep2Str(d.OffsetStep), d.ShiftFreq, ChAtt[d.Att], ChSq[d.Sq], ChTone[d.Tone], ChDCS[d.DCS], d.Bank, d.Lat, d.Lon, d.Skip, d.Ext, d.IsEmpty())
+}
+func (d ChData) LocEnable() bool {
+	return d.Lat != 0 && d.Lon != 0
 }
 
 func(d *ChData) SetName(name string){
@@ -235,6 +242,29 @@ func ParseChData(str string)(ChData, error){
 	}
 	d.Bank = bank_str
 
+	if chByte[0x07] == 0x01 {
+		var lat int32
+		buf_lat := bytes.NewBuffer(chByte[0x08:0x0C])
+		binary.Read(buf_lat, binary.LittleEndian, &lat)
+		d.Lat = float64(lat)/1000000
+
+		var lon int32
+		buf_lon := bytes.NewBuffer(chByte[0x0C:0x10])
+		binary.Read(buf_lon, binary.LittleEndian, &lon)
+		d.Lon = float64(lon)/1000000
+	}else{
+		d.Lat = 0
+		d.Lon = 0
+	}
+
+	if chByte[0x10] == 0x01 {
+		d.Skip = true
+	}else{
+		d.Skip = false
+	}
+
+	d.Ext = hex.EncodeToString(chByte[0x50:0x80])
+
 	return d, nil
 }
 
@@ -293,6 +323,34 @@ func MakeChData(dataOrg string, chData ChData) (string, error){
 		if 0x41 <= v && v <= 0x5a {
 			chByte[0x11+(v-0x41)] = byte(0x01)
 		}
+	}
+
+	if chData.Skip {
+		chByte[0x10] = 0x01
+	}else{
+		chByte[0x10] = 0x00
+	}
+
+	if chData.LocEnable() == false{
+		chByte[0x07] = 0x00
+		chData.Lat = 0
+		chData.Lon = 0
+	}else{
+		chByte[0x07] = 0x01
+	}
+
+	buf_lat := &bytes.Buffer{}
+	_ = binary.Write(buf_lat, binary.LittleEndian, int32(chData.Lat * 1000000))
+	copy(chByte[0x08:0x0c], buf_lat.Bytes())
+
+	buf_lon := &bytes.Buffer{}
+	_ = binary.Write(buf_lon, binary.LittleEndian, int32(chData.Lon * 1000000))
+	copy(chByte[0x0c:0x10], buf_lon.Bytes())
+
+	
+	if chData.Ext != "" {
+		extByte, _ := hex.DecodeString(chData.Ext)
+		copy(chByte[0x50:0x80], extByte)
 	}
 
 	return hex.EncodeToString(chByte), nil

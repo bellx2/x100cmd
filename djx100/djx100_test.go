@@ -17,10 +17,17 @@ func TestSetAndParse(t *testing.T){
 	
 	// テストデータ
 
-	d = append(d, ChData{Freq: 433.100, Mode: 0, Step: 0, Name: "0123456789012345678901234567", Att: 0, ShiftFreq: 0.0, OffsetStep: false, Sq: 0, Tone: 0, DCS: 0})
-	d = append(d, ChData{Freq: 144.100, Mode: 1, Step: 1, Name: "0123456789012345678901234567", Att: 1, ShiftFreq: 1.0124, OffsetStep: true, Sq: 1, Tone: 3, DCS: 6})
-	d = append(d, ChData{Freq: 123.100, Mode: 2, Step: 3, Name: "0123456789012345678901234567", Att: 0, ShiftFreq: -3.1125, OffsetStep: true, Sq: 3, Tone: 4, DCS: 7, Bank: "ABCDXYZ"})
-	d = append(d, ChData{Freq: 111.100, Mode: 4, Step: 3, Name: "0123456789012345678901234567", Att: 0, ShiftFreq: 0.0, OffsetStep: true, Sq: 3, Tone: 4, DCS: 7, Bank: "ABCDE"})
+	d = append(d, ChData{Freq: 433.100, Mode: 0, Step: 0, Name: "0123456789012345678901234567", Att: 0, ShiftFreq: 0.0, OffsetStep: false, Sq: 0, Tone: 0, DCS: 0,
+	Ext: "0100e4000000e400000000000000000000000180018001800180010000800100008001000080000080008000807b1700"})
+
+	d = append(d, ChData{Freq: 144.100, Mode: 1, Step: 1, Name: "0123456789012345678901234567", Att: 1, ShiftFreq: 1.0124, OffsetStep: true, Sq: 1, Tone: 3, DCS: 6, 
+	Ext:"0000e4000000e400000000000000000000000180018001800180010000800100008001000080000080008000807b1701"})
+	
+	d = append(d, ChData{Freq: 123.100, Mode: 2, Step: 3, Name: "0123456789012345678901234567", Att: 0, ShiftFreq: -3.1125, 			OffsetStep: true, Sq: 3, Tone: 4, DCS: 7, Bank: "ABCDXYZ", Lat:35.681382, Lon:139.766084, Skip: true,
+	Ext: "0000e4000000e400000000000000000000000180018001800180010000800100008001000080000080008000807b1703"})
+	
+	d = append(d, ChData{Freq: 111.100, Mode: 4, Step: 3, Name: "0123456789012345678901234567", Att: 0, ShiftFreq: 0.0, OffsetStep: true, Sq: 3, Tone: 4, DCS: 7, Bank: "ABCDE", Lat:35.681382, Lon:139.766084,
+	Ext: "0000e4000000e400000000000000000000000180018001800180010000800100008001000080000080408000807b1700"})
 
 	for _, v := range d {
 		t.Run("SetAndParse", func(t *testing.T) {
@@ -48,6 +55,7 @@ func TestSetAndParse(t *testing.T){
 
 		for k, v := range m {
 			d := ChData{Freq: 433.100, Mode: 0, Step: 0, Name: k, Att: 0, ShiftFreq: 0.0, OffsetStep: false, Sq: 0, Tone: 0, DCS: 0}
+			d.Ext = "0000e4000000e400000000000000000000000180018001800180010000800100008001000080000080008000807b1700"
 			d_res := d
 			d_res.Name = v
 			got, err := SetAndParse(d)
@@ -77,6 +85,7 @@ func TestSetAndParse(t *testing.T){
 
 		for k, v := range m {
 			d := ChData{Freq: 433.100, Mode: 0, Step: 0, Name: "0123456789012345678901234567", Att: 0, ShiftFreq: 0.0, OffsetStep: false, Sq: 0, Tone: 0, DCS: 0, Bank: k}
+			d.Ext = "0000e4000000e400000000000000000000000180018001800180010000800100008001000080000080008000807b1700"
 			d_res := d
 			d_res.Bank = v
 			got, err := SetAndParse(d)
