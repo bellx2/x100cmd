@@ -164,6 +164,36 @@ var importCmd = &cobra.Command{
 						chData.Bank = ""
 					}
 				}
+
+				// 拡張
+				if len(record) > 12 {
+
+					lat, _ := strconv.ParseFloat(record[12], 64)
+					if (lat != 0){
+						chData.Lat = lat
+					}
+
+					lon, _ := strconv.ParseFloat(record[13], 64)
+					if (lon != 0){
+						chData.Lat = lat
+					}
+
+					skip := record[14]
+					if (skip != ""){
+						if (skip == "OFF"){
+							chData.Skip = false
+						}else if (skip == "ON"){
+							chData.Skip = true
+						}
+					}
+
+					if len(record) > 15 {
+						ext := record[15]
+						if (ext != ""){
+							chData.Ext = ext
+						}
+					}
+				}
 			}
 
 			newData, err:= djx100.MakeChData(data, chData)
@@ -177,7 +207,11 @@ var importCmd = &cobra.Command{
 				fmt.Println(ch, err)
 				continue
 			}
-			fmt.Printf("%d : %s : %s\n", ch, res, chData.String())
+			if (cmd.Flag("verbose").Value.String() == "true") {
+				fmt.Printf("%d : %s : %s\n", ch, res, chData.String())
+			}else{
+				fmt.Printf("%d[%s]: %.6f %s\n", ch, res, chData.Freq, chData.Name)
+			}
 		}
 		
 		if cmd.Flag("restart").Value.String() == "true" {
@@ -194,4 +228,5 @@ func init() {
 	rootCmd.AddCommand(importCmd)
 	chCmd.AddCommand(importCmd)
 	importCmd.Flags().BoolP("restart", "r", false, "Send Restart Command")
+	importCmd.Flags().BoolP("verbose", "v", false, "Make the operation more talkative")
 }
