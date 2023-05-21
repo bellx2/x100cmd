@@ -446,6 +446,26 @@ func SetBankName(str string, b string, n string)(string, error){
 	return hex.EncodeToString(chByte), nil
 }
 
+// データ読み込み
+func ReadData(port serial.Port, address string) (string, error){
+	response, err := SendCmd(port, fmt.Sprintf("AL~F%05sM",address))
+	fmt.Printf("Read: 0x%05s\n", address)
+	if err != nil {
+		return "", errors.New("read Command Error")
+	}
+	return response[:0x100], nil
+}
+
+// データ書き込み
+func WriteData(port serial.Port, address string, data string) (string, error){
+	response, err := SendCmd(port, fmt.Sprintf("AL~F%05sW%s",address,data))
+	fmt.Printf("Write: 0x%05s\n", address)
+	if err != nil {
+		return "", errors.New("write Command Error")
+	}
+	return response, nil
+}
+
 // コマンド送信
 func SendCmd(port serial.Port , cmd string) (string, error){
 	_, err := port.Write([]byte(cmd + "\r\n"))

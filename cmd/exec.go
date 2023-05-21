@@ -114,6 +114,55 @@ var FreqCmd = &cobra.Command{
 	},
 }
 
+var ReadCmd = &cobra.Command{
+	Use:   "read [address]",
+	Short: "Read Data",
+	Args: cobra.MinimumNArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		port, err := djx100.Connect(rootCmd.PersistentFlags().Lookup("port").Value.String())
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		response, err := djx100.ReadData(port, args[0])
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		fmt.Println(response)
+	},
+}
+
+var WriteCmd = &cobra.Command{
+	Use:   "write [address] [data]",
+	Short: "Write Data",
+	Args: cobra.MinimumNArgs(2),
+	Run: func(cmd *cobra.Command, args []string) {
+		port, err := djx100.Connect(rootCmd.PersistentFlags().Lookup("port").Value.String())
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		if len(args[1]) != 256 {
+			fmt.Println("Data size must be 256")
+			os.Exit(1)
+		}
+		response, err := djx100.WriteData(port, args[0], args[1])
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		fmt.Println(response)
+
+		err = djx100.RestartCmd(port)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+
+	},
+}
+
 func init() {
 	rootCmd.AddCommand(execCmd)
 	execCmd.AddCommand(restartCmd)
@@ -121,4 +170,6 @@ func init() {
 	execCmd.AddCommand(SQLCmd)
 	execCmd.AddCommand(VolCmd)
 	execCmd.AddCommand(FreqCmd)
+	execCmd.AddCommand(ReadCmd)
+	execCmd.AddCommand(WriteCmd)
 }
