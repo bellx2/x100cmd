@@ -31,6 +31,7 @@ var readCmd = &cobra.Command{
 			os.Exit(1)
 		}
 		if (cmd.Flag("debug").Value.String() == "true") {
+			fmt.Printf("address: %05x\n", 0x20000 + (ch * 0x80))
 			fmt.Println("data:",data)
 		}
 		chData, err := djx100.ParseChData(data)
