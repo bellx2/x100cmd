@@ -25,7 +25,7 @@ func Execute() {
 
 func init() {
 	rootCmd.CompletionOptions.HiddenDefaultCmd = true
-	rootCmd.Version="1.3.3"
+	rootCmd.Version="1.3.4"
 	rootCmd.PersistentFlags().StringP("port", "p", "auto", "Serial Port Name")
 	rootCmd.PersistentFlags().Bool("debug", false, "Show Debug Message")
 }
