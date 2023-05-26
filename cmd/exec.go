@@ -36,6 +36,24 @@ var restartCmd = &cobra.Command{
 	},
 }
 
+var versionCmd = &cobra.Command{
+	Use:   "version",
+	Short: "Display Version",
+	Run: func(cmd *cobra.Command, args []string) {
+		port, err := djx100.Connect(rootCmd.PersistentFlags().Lookup("port").Value.String())
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		response, err := djx100.SendCmd(port, "AL~VER")
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		fmt.Println(response)
+	},
+}
+
 var GPSCmd = &cobra.Command{
 	Use:   "gps",
 	Short: "GPS Info",
@@ -172,4 +190,5 @@ func init() {
 	execCmd.AddCommand(FreqCmd)
 	execCmd.AddCommand(ReadCmd)
 	execCmd.AddCommand(WriteCmd)
+	execCmd.AddCommand(versionCmd)
 }
