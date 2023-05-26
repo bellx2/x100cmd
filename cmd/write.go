@@ -36,6 +36,7 @@ var writeCmd = &cobra.Command{
 			os.Exit(1)
 		}
 		if (cmd.Flag("debug").Value.String() == "true") {
+			fmt.Printf("Address: %05x\n", 0x20000 + (ch * 0x80))
 			fmt.Println("Before_Data:",data)
 		}
 		chData, _ := djx100.ParseChData(data)
@@ -174,7 +175,7 @@ var writeCmd = &cobra.Command{
 			os.Exit(1)
 		}
 		if (cmd.Flag("debug").Value.String() == "true") {
-			fmt.Println("After_Data:",newData)
+			fmt.Println("After_Data :",newData)
 		}
 
 		// Confirmation
