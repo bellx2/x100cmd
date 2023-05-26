@@ -31,21 +31,22 @@ var checkCmd = &cobra.Command{
 		}
 		fmt.Printf("DJ-X100 PortName: %s\n", portName)
 
-		fmt.Println("\n** send command **")
 		port, err := djx100.Connect(portName)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		response, err := djx100.SendCmd(port, "AL~DJ-X100")
+
+		fmt.Println("\n** send device check command **")
+		response, err := djx100.SendCmd(port, "AL~WHO")
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
 		fmt.Println(response)
 
-		fmt.Println("\n** current freq **")
-		freq, err := djx100.SendCmd(port, "AL~FREQ")
+		fmt.Println("\n** current version **")
+		freq, err := djx100.SendCmd(port, "AL~VER")
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
