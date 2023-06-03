@@ -54,6 +54,30 @@ var versionCmd = &cobra.Command{
 	},
 }
 
+var infoCmd = &cobra.Command{
+	Use:   "info",
+	Short: "Display Device Info",
+	Run: func(cmd *cobra.Command, args []string) {
+		port, err := djx100.Connect(rootCmd.PersistentFlags().Lookup("port").Value.String())
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		who, err := djx100.SendCmd(port, "AL~WHOEX")
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		fmt.Println(who)
+		dev, err := djx100.SendCmd(port, "AL~DSPTHRUvr")
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		fmt.Println(dev)
+	},
+}
+
 var GPSCmd = &cobra.Command{
 	Use:   "gps",
 	Short: "GPS Info",
@@ -191,4 +215,5 @@ func init() {
 	execCmd.AddCommand(ReadCmd)
 	execCmd.AddCommand(WriteCmd)
 	execCmd.AddCommand(versionCmd)
+	execCmd.AddCommand(infoCmd)
 }
