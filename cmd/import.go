@@ -175,7 +175,7 @@ var importCmd = &cobra.Command{
 
 					lon, _ := strconv.ParseFloat(record[13], 64)
 					if (lon != 0){
-						chData.Lat = lat
+						chData.Lon = lon
 					}
 
 					skip := record[14]
