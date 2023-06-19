@@ -112,8 +112,8 @@ var importCmd = &cobra.Command{
 					}
 				}
 
-				shift_freq, _ := strconv.ParseFloat(record[6], 64)
-				if (shift_freq != 0){
+				shift_freq, err := strconv.ParseFloat(record[6], 64)
+				if err == nil {
 					chData.ShiftFreq = shift_freq
 				}
 
@@ -147,8 +147,8 @@ var importCmd = &cobra.Command{
 					}
 				}
 
-				dcs := record[10]
-				if (dcs != ""){
+				dcs :=  fmt.Sprintf("%03s",record[10])
+				if (dcs != "000"){
 					chData.DCS = djx100.ChDCS2Num(dcs)
 					if (chData.DCS == -1){
 						err := fmt.Errorf("invalid dcs: %s", dcs)
@@ -168,13 +168,13 @@ var importCmd = &cobra.Command{
 				// 拡張
 				if len(record) > 12 {
 
-					lat, _ := strconv.ParseFloat(record[12], 64)
-					if (lat != 0){
+					lat, err := strconv.ParseFloat(record[12], 64)
+					if err == nil {
 						chData.Lat = lat
 					}
 
-					lon, _ := strconv.ParseFloat(record[13], 64)
-					if (lon != 0){
+					lon, err := strconv.ParseFloat(record[13], 64)
+					if err == nil {
 						chData.Lon = lon
 					}
 
