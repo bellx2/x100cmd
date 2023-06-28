@@ -56,11 +56,15 @@ var importCmd = &cobra.Command{
 				break
 			}
 			ch, _:= strconv.Atoi(record[0])
-			data, err := djx100.ReadChData(port, ch)
-			if err != nil {
-				fmt.Println(err)
-				break
+			data := djx100.BaseData
+			if (cmd.Flag("overwrite").Value.String() == "false"){
+				data, err = djx100.ReadChData(port, ch)
+				if err != nil {
+					fmt.Println(err)
+					break
+				}
 			}
+
 			chData, _ := djx100.ParseChData(data)
 			freq, _ := strconv.ParseFloat(record[1], 64)
 			if (freq == 0){
@@ -227,6 +231,7 @@ var importCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(importCmd)
 	chCmd.AddCommand(importCmd)
+	importCmd.Flags().BoolP("overwrite", "o", true, "Overwrite empty fields with default")
 	importCmd.Flags().BoolP("restart", "r", false, "Send Restart Command")
 	importCmd.Flags().BoolP("verbose", "v", false, "Make the operation more talkative")
 }

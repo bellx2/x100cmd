@@ -218,10 +218,11 @@ Channel,Freq,Mode,Step,Name,offset,shift_freq,att,sq,tone,dcs,bank,lat,lon,skip,
 ....
 ```
 
-| フラグ            | 初期値 | 説明                             |
-| ----------------- | ------ | -------------------------------- |
-| `-v`, `--verbose` | false  | 書き込み中データの詳細を表示する |
-| `-r`, `--restart` | false  | 書き込み後に再起動               |
+| フラグ              | 初期値 | 説明                             |
+| ------------------- | ------ | -------------------------------- |
+| `-o`, `--overwrite` | true   | 空白の場合に初期値で上書き       |
+| `-v`, `--verbose`   | false  | 書き込み中データの詳細を表示する |
+| `-r`, `--restart`   | false  | 書き込み後に再起動               |
 
 ### `x100cmd bank read <A-Z>`
 
