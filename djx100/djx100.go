@@ -12,6 +12,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"strconv"
 	"strings"
 
 	"go.bug.st/serial"
@@ -43,6 +44,21 @@ func (d ChData) IsEmpty() bool {
 func (d ChData) String() string {
 	return fmt.Sprintf(`{"freq":%f, "mode":"%s", "step":"%s", "name":"%s", "offset":"%s", "shift_freq":"%f", "att":"%s", "sq":"%s", "tone":"%s", "dcs":"%s", "bank":"%s", "lat":%f, "lon":%f, "skip":%t, "ext":"%s", "empty": %v }`, d.Freq, ChMode[d.Mode], ChStep[d.Step], d.Name, ChOffsetStep2Str(d.OffsetStep), d.ShiftFreq, ChAtt[d.Att], ChSq[d.Sq], ChTone[d.Tone], ChDCS[d.DCS], d.Bank, d.Lat, d.Lon, d.Skip, d.Ext, d.IsEmpty())
 }
+
+func (d ChData) intFreq() int64 {
+	s := fmt.Sprintf("%03.6f", d.Freq)
+	s = strings.Replace(s, ".", "", 1)
+	r, _ := strconv.ParseInt(s, 10, 64)
+	return r
+}
+
+func (d ChData) intShiftFreq() int64 {
+	s := fmt.Sprintf("%03.6f", d.ShiftFreq)
+	s = strings.Replace(s, ".", "", 1)
+	r, _ := strconv.ParseInt(s, 10, 64)
+	return r
+}
+
 func (d ChData) LocEnable() bool {
 	return d.Lat != 0 && d.Lon != 0
 }
@@ -289,7 +305,7 @@ func MakeChData(dataOrg string, chData ChData) (string, error){
 	chByte, _ := hex.DecodeString(dataOrg)
 
 	buf := &bytes.Buffer{}
-	_ = binary.Write(buf, binary.LittleEndian, int32(chData.Freq * 1000000))
+	_ = binary.Write(buf, binary.LittleEndian, chData.intFreq())
 	copy(chByte[0x00:0x04], buf.Bytes())	
 
 	chByte[0x04] = byte(chData.Mode)
@@ -305,7 +321,7 @@ func MakeChData(dataOrg string, chData ChData) (string, error){
 	chByte[0x4f] = byte(chData.DCS)
 
 	buf_s := &bytes.Buffer{}
-	_ = binary.Write(buf_s, binary.LittleEndian, int32(chData.ShiftFreq * 1000000))
+	_ = binary.Write(buf_s, binary.LittleEndian, chData.intShiftFreq())
 	copy(chByte[0x48:0x4c], buf_s.Bytes())
 
 	name_sjis, _ := UTF8toSJIS(chData.Name)
