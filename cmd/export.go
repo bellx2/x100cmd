@@ -60,9 +60,9 @@ var exportCmd = &cobra.Command{
 			w.Write([]string{"Channel","Freq","Mode","Step","Name","offset","shift_freq","att","sq","tone","dcs","bank","lat","lon","skip","ext"})
 		}
 
-		bar := pb.StartNew(999)
+		bar := pb.StartNew(1000)
 		bar.SetMaxWidth(80)
-		for ch:=1; ch<1000; ch++ {
+		for ch:=0; ch<1000; ch++ {
 			data, err := djx100.ReadChData(port, ch)
 			if err != nil {
 				fmt.Println(err)
