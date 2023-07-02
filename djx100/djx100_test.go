@@ -55,6 +55,9 @@ func TestSetAndParse(t *testing.T){
 		m["0アイウエオかきくけこさしす0せそ"] = "0アイウエオかきくけこさしす0"
 		m["アイウ"] = "アイウ"
 		m["0アイウ"] = "0アイウ"
+		m["G"] = "G"
+		m["G1"] = "G1"
+		m["G12"] = "G12"
 
 		for k, v := range m {
 			d := ChData{Freq: 433.100, Mode: 0, Step: 0, Name: k, Att: 0, ShiftFreq: 0.0, OffsetStep: false, Sq: 0, Tone: 0, DCS: 0}
