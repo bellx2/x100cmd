@@ -460,7 +460,7 @@ func SetBankName(str string, b string, n string)(string, error){
       if i == max_size-1 && SJISMultiCheck(name_sjis[i]){ // 最後がマルチバイトの場合は0埋め
         chByte[idx*0x10 + 0x10 + i] = 0x00
       }
-    	if SJISMultiCheck(name_sjis[i]) { //マルチバイトの場合はもう一文字進める
+    	if (i+1 < len(name_sjis) && SJISMultiCheck(name_sjis[i])) { //マルチバイトの場合はもう一文字進める
       	i++
     		chByte[idx*0x10 + 0x10 + i] = name_sjis[i]
    		}
