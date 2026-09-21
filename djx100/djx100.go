@@ -11,9 +11,12 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
+	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"go.bug.st/serial"
 	"go.bug.st/serial/enumerator"
@@ -42,7 +45,7 @@ func (d ChData) IsEmpty() bool {
 	return d.Freq == 0
 }
 func (d ChData) String() string {
-	return fmt.Sprintf(`{"freq":%f, "mode":"%s", "step":"%s", "name":"%s", "offset":"%s", "shift_freq":"%f", "att":"%s", "sq":"%s", "tone":"%s", "dcs":"%s", "bank":"%s", "lat":%f, "lon":%f, "skip":%t, "ext":"%s", "empty": %v }`, d.Freq, ChMode[d.Mode], ChStep[d.Step], d.Name, ChOffsetStep2Str(d.OffsetStep), d.ShiftFreq, ChAtt[d.Att], ChSq[d.Sq], ChTone[d.Tone], ChDCS[d.DCS], d.Bank, d.Lat, d.Lon, d.Skip, d.Ext, d.IsEmpty())
+	return fmt.Sprintf(`{"freq":%f, "mode":"%s", "step":"%s", "name":"%s", "offset":"%s", "shift_freq":"%f", "att":"%s", "sq":"%s", "tone":"%s", "dcs":"%s", "bank":"%s", "lat":%f, "lon":%f, "skip":%t, "ext":"%s", "empty": %v }`, d.Freq, ChMode2Str(d.Mode), ChStep[d.Step], d.Name, ChOffsetStep2Str(d.OffsetStep), d.ShiftFreq, ChAtt[d.Att], ChSq[d.Sq], ChTone[d.Tone], ChDCS[d.DCS], d.Bank, d.Lat, d.Lon, d.Skip, d.Ext, d.IsEmpty())
 }
 
 func (d ChData) intFreq() int64 {
@@ -77,6 +80,13 @@ func ChMode2Num(mode string) (int){
 		}
 	}
 	return -1
+}
+
+func ChMode2Str(mode int) (string){
+	if mode < 0 || mode >= len(ChMode){
+		return "Unknown"
+	}
+	return ChMode[mode]
 }
 
 var ChStep = []string{"1k","5k","6k25","8k33","10k","12k5","15k","20k","25k","30k","50k","100k","125k","200k"}
@@ -502,6 +512,67 @@ func SendCmd(port serial.Port , cmd string) (string, error){
 	scanner.Scan()	// response
 	response := scanner.Text()
 	return response, nil
+}
+
+// メジャーバージョン取得
+func GetMajorVersion(port serial.Port) (int, error) {
+	ver, err := SendCmd(port, "AL~VER")
+	if err != nil || !strings.Contains(ver, " ") || !strings.Contains(ver, ".") {
+		return 0, errors.New("version Command Error")
+	}
+	return strconv.Atoi(ver[strings.Index(ver, " ")+1 : strings.Index(ver, ".")])
+}
+
+// OPTトークン取得
+func GetToken(urlStr string) (string, error) {
+    client := &http.Client{
+        Timeout: 10 * time.Second,
+    }
+    resp, err := client.Get(urlStr)
+    if err != nil {
+        return "", fmt.Errorf("HTTP request failed: %w", err)
+    }
+    defer resp.Body.Close()
+
+    if resp.StatusCode != http.StatusOK {
+        return "", fmt.Errorf("HTTP error: %d", resp.StatusCode)
+    }
+
+    // 最大32バイトまでに制限
+    body, err := io.ReadAll(io.LimitReader(resp.Body, 32))
+    if err != nil {
+        return "", fmt.Errorf("failed to read response: %w", err)
+    }
+    if len(body) < 16 {
+        return "", fmt.Errorf("token too short: %d bytes", len(body))
+    }
+    token := string(body)[:16]
+    if _, err := hex.DecodeString(token); err != nil {
+        return "", fmt.Errorf("invalid hex token: %w", err)
+    }
+    return token, nil
+}
+
+// OTP Auth
+func AuthOTP(port serial.Port, server string) (string, error){
+	otp, err := SendCmd(port, "AL~DJX100")
+	if err != nil {
+		return "",fmt.Errorf("failed to read response: %w", err)
+	}
+	url := strings.Replace(server,":otp",otp,-1)
+	token, err := GetToken(url)
+	// fmt.Printf("%s -> %s\n", otp, token)
+	if err != nil {
+		return "", errors.New("token server error")
+	}
+	response, err := SendCmd(port, "AL~DJX100"+token)
+	if err != nil {
+		return "", fmt.Errorf("failed to read response: %w", err)
+	}
+	if response != "OK" {
+		return "", errors.New("OTP Auth Error")
+	}
+	return fmt.Sprintf("%s,%s,%s", response, otp, token), nil
 }
 
 // リスタート送信

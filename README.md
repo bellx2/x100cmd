@@ -60,10 +60,11 @@ x100cmd exec restart
 
 接続状態を確認します。
 
-```sh
+```text
 x100cmd check
 
 ** scan ports **
+/dev/cu.debug-console
 /dev/cu.wlan-debug
 /dev/cu.Bluetooth-Incoming-Port
 /dev/cu.usbmodem00000000000001 [3614:D001] DJ-X100!
@@ -72,11 +73,10 @@ x100cmd check
 PortName: auto
 DJ-X100 PortName: /dev/cu.usbmodem00000000000001
 
-** send command **
-OK
-
-** current freq **
-433.000000
+Device Check :  DJ-X100
+Current Version :  ver 2.00-000
+Major Version :  2
+Freq:   464.884374, 464.884375
 ```
 
 ### `x100cmd read <channel_no>`<br/>`x100cmd ch read <channel_no>`
