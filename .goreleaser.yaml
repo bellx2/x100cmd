@@ -45,8 +45,17 @@ changelog:
 # Feel free to remove those if you don't want/use them.
 # yaml-language-server: $schema=https://goreleaser.com/static/schema.json
 # vim: set ts=2 sw=2 tw=0 fo=cnqoj
-brews:
-  - repository:
+homebrew_casks:
+  - name: x100cmd
+    repository:
       owner: bellx2 # Homebrew Taps 用のリポジトリのオーナー名
       name: homebrew-tap # Homebrew Taps 用のリポジトリ名
       token: '{{ .Env.TAP_GITHUB_TOKEN }}'
+    directory: Casks
+    homepage: https://github.com/bellx2/x100cmd
+    description: Unofficial Utility for ALINCO DJ-X100
+    # 未署名バイナリのためGatekeeperの隔離属性を外す
+    hooks:
+      post:
+        install_steps: |
+          run "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "{{ .StagedPath }}/x100cmd"]
