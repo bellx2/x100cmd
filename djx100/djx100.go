@@ -5,7 +5,6 @@ Copyright © 2023 Ryu Tanabe <bellx2@gmali.com>
 package djx100
 
 import (
-	"bufio"
 	"bytes"
 	"encoding/binary"
 	"encoding/hex"
@@ -232,6 +231,10 @@ func Connect(portName string) (serial.Port, error){
 	}
 	port, err := serial.Open(p, mode)
 	if err != nil {
+		return nil, err
+	}
+	// 応答がない場合に読み込みで止まらないようにする
+	if err := port.SetReadTimeout(100 * time.Millisecond); err != nil {
 		return nil, err
 	}
 	response, err := SendCmd(port, "AL~DJ-X100")
@@ -532,17 +535,31 @@ func WriteData(port serial.Port, address string, data string) (string, error){
 	return response, nil
 }
 
+// コマンド応答のタイムアウト
+var cmdTimeout = 5 * time.Second
+
 // コマンド送信
 func SendCmd(port serial.Port , cmd string) (string, error){
 	_, err := port.Write([]byte(cmd + "\r\n"))
 	if err != nil {
 		return "", err
 	}
-	scanner := bufio.NewScanner(port)
-	scanner.Scan()	// skip first line
-	scanner.Scan()	// response
-	response := scanner.Text()
-	return response, nil
+	// 1行目(エコー)と2行目(応答)を受信するまで待つ
+	var buf []byte
+	tmp := make([]byte, 1024)
+	deadline := time.Now().Add(cmdTimeout)
+	for bytes.Count(buf, []byte("\n")) < 2 {
+		if time.Now().After(deadline) {
+			return "", errors.New("response timeout")
+		}
+		n, err := port.Read(tmp)
+		if err != nil {
+			return "", err
+		}
+		buf = append(buf, tmp[:n]...)
+	}
+	lines := strings.Split(string(buf), "\n")
+	return strings.TrimRight(lines[1], "\r"), nil
 }
 
 // メジャーバージョン取得
