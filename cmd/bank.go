@@ -38,6 +38,7 @@ var bankReadCmd = &cobra.Command{
 			_, err := authOTP(port)
 			if err != nil {
 				fmt.Println(err)
+				os.Exit(1)
 			}
 		}
 		dataOrg, err := djx100.ReadBankData(port)
@@ -80,6 +81,7 @@ var bankWriteCmd = &cobra.Command{
 			_, err := authOTP(port)
 			if err != nil {
 				fmt.Println(err)
+				os.Exit(1)
 			}
 		}
 		dataOrg, err := djx100.ReadBankData(port)

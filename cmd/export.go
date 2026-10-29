@@ -78,9 +78,9 @@ var exportCmd = &cobra.Command{
 				continue
 			}
 			if (cmd.Flag("ext").Value.String() == "false"){
-				w.Write([]string{fmt.Sprintf("%03d",ch), fmt.Sprintf("%.6f",chData.Freq), djx100.ChMode[chData.Mode], djx100.ChStep[chData.Step], chData.Name, djx100.ChOffsetStep2Str(chData.OffsetStep), fmt.Sprintf("%.6f",chData.ShiftFreq), djx100.ChAtt[chData.Att], djx100.ChSq[chData.Sq], djx100.ChTone[chData.Tone], djx100.ChDCS[chData.DCS], chData.Bank, fmt.Sprintf("%.6f",chData.Lat), fmt.Sprintf("%.6f",chData.Lon), djx100.Bool2Str(chData.Skip)})
+				w.Write([]string{fmt.Sprintf("%03d",ch), fmt.Sprintf("%.6f",chData.Freq), djx100.ChMode2Str(chData.Mode), djx100.ChStep[chData.Step], chData.Name, djx100.ChOffsetStep2Str(chData.OffsetStep), fmt.Sprintf("%.6f",chData.ShiftFreq), djx100.ChAtt[chData.Att], djx100.ChSq[chData.Sq], djx100.ChTone[chData.Tone], djx100.ChDCS[chData.DCS], chData.Bank, fmt.Sprintf("%.6f",chData.Lat), fmt.Sprintf("%.6f",chData.Lon), djx100.Bool2Str(chData.Skip)})
 			}else{
-				w.Write([]string{fmt.Sprintf("%03d",ch), fmt.Sprintf("%.6f",chData.Freq), djx100.ChMode[chData.Mode], djx100.ChStep[chData.Step], chData.Name, djx100.ChOffsetStep2Str(chData.OffsetStep), fmt.Sprintf("%.6f",chData.ShiftFreq), djx100.ChAtt[chData.Att], djx100.ChSq[chData.Sq], djx100.ChTone[chData.Tone], djx100.ChDCS[chData.DCS], chData.Bank, fmt.Sprintf("%.6f",chData.Lat), fmt.Sprintf("%.6f",chData.Lon), djx100.Bool2Str(chData.Skip), chData.Ext})
+				w.Write([]string{fmt.Sprintf("%03d",ch), fmt.Sprintf("%.6f",chData.Freq), djx100.ChMode2Str(chData.Mode), djx100.ChStep[chData.Step], chData.Name, djx100.ChOffsetStep2Str(chData.OffsetStep), fmt.Sprintf("%.6f",chData.ShiftFreq), djx100.ChAtt[chData.Att], djx100.ChSq[chData.Sq], djx100.ChTone[chData.Tone], djx100.ChDCS[chData.DCS], chData.Bank, fmt.Sprintf("%.6f",chData.Lat), fmt.Sprintf("%.6f",chData.Lon), djx100.Bool2Str(chData.Skip), chData.Ext})
 			}
 			bar.Increment()
 		}

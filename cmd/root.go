@@ -10,10 +10,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var version string
-var commit string
-var date string
-
 var rootCmd = &cobra.Command{
 	Use:   "x100cmd",
 	Short: "Unofficial Utility for ALINCO DJ-X100",
