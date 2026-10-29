@@ -35,7 +35,7 @@ var bankReadCmd = &cobra.Command{
 			fmt.Println(err)
 		}
 		if major > 1 {
-			_, err := djx100.AuthOTP(port, rootCmd.PersistentFlags().Lookup("url").Value.String())
+			_, err := authOTP(port)
 			if err != nil {
 				fmt.Println(err)
 			}
@@ -77,7 +77,7 @@ var bankWriteCmd = &cobra.Command{
 			os.Exit(1)
 		}
 		if major > 1 {
-			_, err := djx100.AuthOTP(port, rootCmd.PersistentFlags().Lookup("url").Value.String())
+			_, err := authOTP(port)
 			if err != nil {
 				fmt.Println(err)
 			}

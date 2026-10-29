@@ -30,6 +30,7 @@ func init() {
 	rootCmd.CompletionOptions.HiddenDefaultCmd = true
 	rootCmd.Version="1.4.0"
 	rootCmd.PersistentFlags().StringP("port", "p", "auto", "Serial Port Name")
-	rootCmd.PersistentFlags().String("url", "https://dj256.t7b.workers.dev/v1/otp/:otp", "Endpoint URL")
+	rootCmd.PersistentFlags().String("url", "", "Endpoint URL (default: built-in URL)")
+	rootCmd.PersistentFlags().Bool("agree", false, "Agree to send OTP to the endpoint without confirmation")
 	rootCmd.PersistentFlags().Bool("debug", false, "Show Debug Message")
 }
