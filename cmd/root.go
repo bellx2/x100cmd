@@ -24,7 +24,7 @@ func Execute() {
 
 func init() {
 	rootCmd.CompletionOptions.HiddenDefaultCmd = true
-	rootCmd.Version="1.4.0"
+	rootCmd.Version="1.4.1"
 	rootCmd.PersistentFlags().StringP("port", "p", "auto", "Serial Port Name")
 	rootCmd.PersistentFlags().String("url", "", "Endpoint URL (default: built-in URL)")
 	rootCmd.PersistentFlags().Bool("agree", false, "Agree to send OTP to the endpoint without confirmation")
