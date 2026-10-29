@@ -1,3 +1,5 @@
+version: 2
+
 # This is an example .goreleaser.yml file with some sensible defaults.
 # Make sure to check the documentation at https://goreleaser.com
 before:
@@ -12,9 +14,11 @@ builds:
     goos:
       - windows
       - darwin
+    ldflags:
+      - -s -w -X github.com/bellx2/x100cmd/cmd.otpURL={{ .Env.OTP_URL }}
 
 archives:
-  - format: tar.gz
+  - formats: [tar.gz]
     # this name template makes the OS and Arch compatible with the results of uname.
     name_template: >-
       {{ .ProjectName }}_
@@ -26,11 +30,11 @@ archives:
     # use zip for windows archives
     format_overrides:
       - goos: windows
-        format: zip
+        formats: [zip]
 checksum:
   name_template: 'checksums.txt'
 snapshot:
-  name_template: '{{ incpatch .Version }}-next'
+  version_template: '{{ incpatch .Version }}-next'
 changelog:
   sort: asc
   filters:
@@ -41,8 +45,17 @@ changelog:
 # Feel free to remove those if you don't want/use them.
 # yaml-language-server: $schema=https://goreleaser.com/static/schema.json
 # vim: set ts=2 sw=2 tw=0 fo=cnqoj
-brews:
-  - tap:
+homebrew_casks:
+  - name: x100cmd
+    repository:
       owner: bellx2 # Homebrew Taps 用のリポジトリのオーナー名
       name: homebrew-tap # Homebrew Taps 用のリポジトリ名
       token: '{{ .Env.TAP_GITHUB_TOKEN }}'
+    directory: Casks
+    homepage: https://github.com/bellx2/x100cmd
+    description: Unofficial Utility for ALINCO DJ-X100
+    # 未署名バイナリのためGatekeeperの隔離属性を外す
+    hooks:
+      post:
+        install_steps: |
+          run "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "{{ .StagedPath }}/x100cmd"]

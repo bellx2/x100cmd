@@ -1,6 +1,7 @@
 package djx100
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -110,4 +111,104 @@ func TestSetAndParse(t *testing.T){
 		}
 	})
 
+}
+
+// ChMode2Numのテスト
+func TestChMode2Num(t *testing.T) {
+    tests := []struct {
+        input    string
+        expected int
+        desc     string
+    }{
+        {"FM", 0, "基本モード：FM"},
+        {"AM", 2, "基本モード：AM"},
+        {"DMR", 6, "デジタルモード：DMR"},
+        {"12KIF_N", 20, "最後のモード"},
+        {"INVALID", -1, "無効なモード"},
+        {"", -1, "空文字列"},
+    }
+
+    for _, tt := range tests {
+        t.Run(tt.desc, func(t *testing.T) {
+            result := ChMode2Num(tt.input)
+            if result != tt.expected {
+                t.Errorf("ChMode2Num(%q) = %d; want %d (%s)", tt.input, result, tt.expected, tt.desc)
+            } else {
+                t.Logf("ChMode2Num Test Success: %q -> %d (%s)", tt.input, result, tt.desc)
+            }
+        })
+    }
+}
+
+// ChMode2Strのテスト
+func TestChMode2Str(t *testing.T) {
+    tests := []struct {
+        input    int
+        expected string
+        desc     string
+    }{
+        {0, "FM", "基本モード：FM"},
+        {2, "AM", "基本モード：AM"},
+        {6, "DMR", "デジタルモード：DMR"},
+        {20, "12KIF_N", "最後のモード"},
+        {-1, "Unknown", "範囲外：負数"},
+        {21, "Unknown", "範囲外：上限超過"},
+    }
+
+    for _, tt := range tests {
+        t.Run(tt.desc, func(t *testing.T) {
+            result := ChMode2Str(tt.input)
+            if result != tt.expected {
+                t.Errorf("ChMode2Str(%d) = %q; want %q (%s)", tt.input, result, tt.expected, tt.desc)
+            } else {
+                t.Logf("ChMode2Str Test Success: %d -> %q (%s)", tt.input, result, tt.desc)
+            }
+        })
+    }
+}
+
+func TestSelectChMode(t *testing.T){
+	// バージョン文字列ごとのC4FMのモード値
+	m := map[string]int{}
+	m["ver 2.00-000"] = 0x0F
+	m["ver 4.00-001"] = 0x10
+	for ver, want := range m {
+		t.Run(ver, func(t *testing.T) {
+			major, err := ParseMajorVersion(ver)
+			if err != nil {
+				t.Fatalf("ParseMajorVersion(%q): %v", ver, err)
+			}
+			got := SelectChMode(major)
+			if got[want] != "C4FM" {
+				t.Errorf("SelectChMode(%d)[0x%02x] = %s", major, want, got[want])
+			}
+		})
+	}
+	if _, err := ParseMajorVersion("unknown"); err == nil {
+		t.Errorf("ParseMajorVersion(\"unknown\") should fail")
+	}
+}
+
+func TestConvertModeV2toV4(t *testing.T){
+	if _, ok := ConvertModeV2toV4("00000000FF" + BaseData[10:]); ok {
+		t.Errorf("out of range mode should not be converted")
+	}
+	for m := 0; m < len(ChModeV2); m++ {
+		data := "00000000" + fmt.Sprintf("%02X", m) + BaseData[10:]
+		got, ok := ConvertModeV2toV4(data)
+		if (m >= 0x07) != ok {
+			t.Errorf("mode 0x%02x: converted=%v", m, ok)
+			continue
+		}
+		d, _ := ParseChData(got)
+		ChMode = ChModeV4
+		name := ChMode2Str(d.Mode)
+		ChMode = ChModeV2
+		if name != ChModeV2[m] {
+			t.Errorf("mode 0x%02x: %s -> %s", m, ChModeV2[m], name)
+		}
+	}
+	if _, ok := ConvertModeV2toV4(BaseData); ok {
+		t.Errorf("empty channel should not be converted")
+	}
 }

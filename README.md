@@ -8,7 +8,8 @@
 
 ## :beginner: 使い方
 
-- macos の場合[Homebrew](https://brew.sh/index_ja)がインストール済みであれば`brew install bellx2/tap/x100cmd`でインストール可能です。アップデートは`brew upgrade x100cmd`で行えます。
+- macos の場合[Homebrew](https://brew.sh/index_ja)がインストール済みであれば`brew install --cask bellx2/tap/x100cmd`でインストール可能です。アップデートは`brew upgrade --cask x100cmd`で行えます。
+  - v1.3.10 以前を Homebrew でインストールしている場合は、Formula から Cask へ移行したため一度入れ直してください。<br/>`brew uninstall x100cmd && brew install --cask bellx2/tap/x100cmd`
 - Windows/macos 用のビルド済みバイナリーは[Releases](https://github.com/bellx2/x100cmd/releases/)よりダウンロードできます。任意の場所に置いて実行してください。
 - [DJ-X100](https://www.alinco.co.jp/product/electron/detail/djx100.html) を USB ケーブルで接続します。
 
@@ -43,6 +44,7 @@ x100cmd exec restart
   - [`clear`] - チャンネルデータクリア
   - [`export`] - チャンネルデータのファイル出力
   - [`import`] - チャンネルデータのファイル読み込み
+  - [`convert`] - V2のモード値をV4に変換
 
 - [`bank`] - バンクコマンド(初期ファームのみ)
 
@@ -51,19 +53,24 @@ x100cmd exec restart
 
 - [`exec`] - 制御コマンド実行
 
+- [`otp`] - OTP認証
+
 | グローバルフラグ | デフォルト | 説明                                               |
 | ---------------- | ---------- | -------------------------------------------------- |
 | `-p`, `--port`   | `auto`     | シリアルポート名 <br/>`auto`の場合は自動検索します |
+| `--url`          | 組み込みURL | OTPトークン取得先（テスト用の上書き） <br/>`:otp`は本体から取得したOTPに置き換えます |
+| `--agree`        | false      | OTP送信の確認を省略して同意する（スクリプト実行用） |
 | `--debug`        | false      | デバッグ表示                                       |
 
 ### `x100cmd check`
 
 接続状態を確認します。
 
-```sh
+```text
 x100cmd check
 
 ** scan ports **
+/dev/cu.debug-console
 /dev/cu.wlan-debug
 /dev/cu.Bluetooth-Incoming-Port
 /dev/cu.usbmodem00000000000001 [3614:D001] DJ-X100!
@@ -72,11 +79,10 @@ x100cmd check
 PortName: auto
 DJ-X100 PortName: /dev/cu.usbmodem00000000000001
 
-** send command **
-OK
-
-** current freq **
-433.000000
+Device Check :  DJ-X100
+Current Version :  ver 2.00-000
+Major Version :  2
+Freq:   464.884374, 464.884375
 ```
 
 ### `x100cmd read <channel_no>`<br/>`x100cmd ch read <channel_no>`
@@ -101,7 +107,7 @@ x100cmd write 10 -f 433.00 -m FM -n "430メイン" -s "20k" -r
 | フラグ | 初期値 | 説明 |
 | ----------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `-f`, `--freq` | | 周波数 (e.g. 433.0) |
-| `-m`, `--mode` | | モード: FM, NFM, AM, NAM, T98 , T102_B54, DMR, T61_typ1, T61_typ2, T61_typ3, T61_typ4,T61_typx,ICDU,dPMR,DSTAR, C4FM, AIS, ACARS, POCSAG, 12KIF_W, 12KIF_N <br />※対応してないモードは表示されない? |
+| `-m`, `--mode` | | モード: FM, NFM, AM, NAM, T98 , T102_B54, DMR, NXDN_N(V4のみ), T61_typ1, T61_typ2, T61_typ3, T61_typ4,T61_typx,ICDU,dPMR,DSTAR, C4FM, AIS, ACARS, POCSAG, 12KIF_W, 12KIF_N <br />※対応してないモードは表示されない? <br />※接続時に`AL~VER`で判定し、CPU 4.00以降(V4)はNXDN_Nを含むモード値で読み書きします |
 | `-s`, `--step` | | 周波数ステップ: 1k, 5k, 6k25, 8k33, 10k, 12k5,15k, 20k, 25k, 30k, 50k, 100k, 125k,200k |
 | `-n`, `--name` | | 名称 (UTF-8) 最大: 30byte, NONE で空白 |
 | `--offset` | | オフセット : ON, OFF |
@@ -224,11 +230,32 @@ Channel,Freq,Mode,Step,Name,offset,shift_freq,att,sq,tone,dcs,bank,lat,lon,skip,
 | `-v`, `--verbose`   | false  | 書き込み中データの詳細を表示する |
 | `-r`, `--restart`   | false  | 書き込み後に再起動               |
 
+### `x100cmd convert <start> <end>`<br/>`x100cmd ch convert <start> <end>`
+
+V2ファームウェア(CPU 2.00)で保存したチャンネルのモード値を、V4ファームウェア(CPU 4.00以降)の値に変換します。V4ではNXDN_Nが追加されモード値`0x07`以降が+1されていますが、ファームウェア更新では既存メモリーは変換されないため、更新前に保存したチャンネルはモードが1つ前にずれて表示されます（例: AIS → C4FM）。
+
+指定範囲のチャンネルを読み込み、変換対象の一覧を表示してから確認の上で書き込みます。V4で保存し直したチャンネルを含めると二重に変換されるため、範囲は更新前に保存したチャンネルだけを指定してください。V4本体に接続している場合のみ実行できます。
+
+```sh
+x100cmd convert 0 128
+
+001: AIS (0x10 -> 0x11)
+003: ACARS (0x11 -> 0x12)
+✔ Convert 2 channels? [y/N]: y
+001 : OK
+003 : OK
+```
+
+| フラグ            | 初期値 | 説明               |
+| ----------------- | ------ | ------------------ |
+| `-y`, `--yes`     | false  | 確認をしない       |
+| `-r`, `--restart` | false  | 実行後再起動       |
+
 ### `x100cmd bank read <A-Z>`
 
-**(初期ファームウェア v1.00 のみ)**
+**(初期ファームウェア v1.00 、またはメジャーバージョン2以降でOTP認証が通る場合)**
 
-バンク名を読み込みます。バンクは A-Z で指定します。省略した場合はすべてのバンクを出力します
+バンク名を読み込みます。メジャーバージョン2以降では実行前にOTP認証を行います。バンクは A-Z で指定します。省略した場合はすべてのバンクを出力します
 
 ```sh
 x100cmd bank read A
@@ -242,9 +269,9 @@ x100cmd bank read ABC
 
 ### `x100cmd bank write <A-Z> <bank_name>`
 
-**(ファームウェア v1.00 のみ)**
+**(初期ファームウェア v1.00 、またはメジャーバージョン2以降でOTP認証が通る場合)**
 
-バンク名を書き込みます。バンクは A-Z で指定します。再起動するまで反映されません。`-r`オプションを付けると書き込み後に再起動を行います。名称に`NONE`を指定すると名称を消去します（表示は`バンク-A~Z`となります）。
+バンク名を書き込みます。メジャーバージョン2以降では実行前にOTP認証を行います。バンクは A-Z で指定します。再起動するまで反映されません。`-r`オプションを付けると書き込み後に再起動を行います。名称に`NONE`を指定すると名称を消去します（表示は`バンク-A~Z`となります）。
 
 ```sh
 x100cmd bank write A "羽田空港" -r
@@ -254,6 +281,16 @@ x100cmd bank write A "羽田空港" -r
 | ----------------- | ------ | ------------------ |
 | `-y`, `--yes`     | false  | 上書き確認をしない |
 | `-r`, `--restart` | false  | 実行後再起動       |
+
+### `x100cmd otp`
+
+本体からOTPを取得し、`--url`のサーバーで得たトークンを本体へ送って認証します。成功すると`OK,<otp>,<token>`を表示します。
+
+OTPは外部サーバー（配布バイナリに組み込まれたURL、または`--url`）へ送信されます。送信前に確認を表示し、同意した場合のみ送信します（`otp`、`bank read`、`bank write`共通）。同意しない場合や、パイプ実行など確認を表示できない場合は中断します。確認を省略するには`--agree`を指定してください。
+
+```sh
+x100cmd otp
+```
 
 ### `x100cmd exec <command>`
 

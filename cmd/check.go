@@ -36,22 +36,34 @@ var checkCmd = &cobra.Command{
 			fmt.Println(err)
 			os.Exit(1)
 		}
-
-		fmt.Println("\n** send device check command **")
+		fmt.Println()
 		response, err := djx100.SendCmd(port, "AL~WHO")
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		fmt.Println(response)
+		fmt.Println("Device Check : ", response)
 
-		fmt.Println("\n** current version **")
 		freq, err := djx100.SendCmd(port, "AL~VER")
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		fmt.Println(freq)
+		fmt.Println("Current Version : ",freq)
+
+		major, err := djx100.GetMajorVersion(port)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		fmt.Println("Major Version : ", major)
+
+		freq, err = djx100.SendCmd(port, "AL~FREQ")
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		fmt.Println("Freq:  ", freq)
 
 		if (cmd.Flag("restart").Value.String() == "true") {
 			fmt.Println("\n** send restart command **")

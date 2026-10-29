@@ -30,6 +30,17 @@ var bankReadCmd = &cobra.Command{
 			fmt.Println(err)
 			os.Exit(1)
 		}
+		major, err := djx100.GetMajorVersion(port)
+		if err != nil {
+			fmt.Println(err)
+		}
+		if major > 1 {
+			_, err := authOTP(port)
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+		}
 		dataOrg, err := djx100.ReadBankData(port)
 		if err != nil {
 			fmt.Println(err)
@@ -60,6 +71,18 @@ var bankWriteCmd = &cobra.Command{
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
+		}
+		major, err := djx100.GetMajorVersion(port)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		if major > 1 {
+			_, err := authOTP(port)
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
 		}
 		dataOrg, err := djx100.ReadBankData(port)
 		if err != nil {
