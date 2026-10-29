@@ -12,6 +12,8 @@ builds:
     goos:
       - windows
       - darwin
+    ldflags:
+      - -s -w -X github.com/bellx2/x100cmd/cmd.version={{ .Version }}
 
 archives:
   - format: tar.gz

@@ -11,9 +11,12 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
+	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"go.bug.st/serial"
 	"go.bug.st/serial/enumerator"
@@ -42,7 +45,7 @@ func (d ChData) IsEmpty() bool {
 	return d.Freq == 0
 }
 func (d ChData) String() string {
-	return fmt.Sprintf(`{"freq":%f, "mode":"%s", "step":"%s", "name":"%s", "offset":"%s", "shift_freq":"%f", "att":"%s", "sq":"%s", "tone":"%s", "dcs":"%s", "bank":"%s", "lat":%f, "lon":%f, "skip":%t, "ext":"%s", "empty": %v }`, d.Freq, ChMode[d.Mode], ChStep[d.Step], d.Name, ChOffsetStep2Str(d.OffsetStep), d.ShiftFreq, ChAtt[d.Att], ChSq[d.Sq], ChTone[d.Tone], ChDCS[d.DCS], d.Bank, d.Lat, d.Lon, d.Skip, d.Ext, d.IsEmpty())
+	return fmt.Sprintf(`{"freq":%f, "mode":"%s", "step":"%s", "name":"%s", "offset":"%s", "shift_freq":"%f", "att":"%s", "sq":"%s", "tone":"%s", "dcs":"%s", "bank":"%s", "lat":%f, "lon":%f, "skip":%t, "ext":"%s", "empty": %v }`, d.Freq, ChMode2Str(d.Mode), ChStep[d.Step], d.Name, ChOffsetStep2Str(d.OffsetStep), d.ShiftFreq, ChAtt[d.Att], ChSq[d.Sq], ChTone[d.Tone], ChDCS[d.DCS], d.Bank, d.Lat, d.Lon, d.Skip, d.Ext, d.IsEmpty())
 }
 
 func (d ChData) intFreq() int64 {
@@ -68,7 +71,20 @@ func(d *ChData) SetName(name string){
 	d.Name = n
 }
 
-var ChMode = []string{"FM", "NFM", "AM", "NAM", "T98", "T102_B54", "DMR", "T61_typ1", "T61_typ2","T61_typ3","T61_typ4","T61_typx", "ICDU", "dPMR","DSTAR","C4FM","AIS","ACARS","POCSAG","12KIF_W","12KIF_N" }
+// CPU 2.00系のモード値
+var ChModeV2 = []string{"FM", "NFM", "AM", "NAM", "T98", "T102_B54", "DMR", "T61_typ1", "T61_typ2","T61_typ3","T61_typ4","T61_typx", "ICDU", "dPMR","DSTAR","C4FM","AIS","ACARS","POCSAG","12KIF_W","12KIF_N" }
+// CPU 4.00系以降のモード値 (DMRの後にNXDN_Nが挿入され以降が+1される)
+var ChModeV4 = []string{"FM", "NFM", "AM", "NAM", "T98", "T102_B54", "DMR", "NXDN_N", "T61_typ1", "T61_typ2","T61_typ3","T61_typ4","T61_typx", "ICDU", "dPMR","DSTAR","C4FM","AIS","ACARS","POCSAG","12KIF_W","12KIF_N" }
+// 接続時にファームウェアのバージョンで切り替える
+var ChMode = ChModeV2
+
+// メジャーバージョンからモード表を選択 (CPU 4.00以降はV4)
+func SelectChMode(major int) []string {
+	if major >= 4 {
+		return ChModeV4
+	}
+	return ChModeV2
+}
 
 func ChMode2Num(mode string) (int){
 	for i, v := range ChMode {
@@ -77,6 +93,13 @@ func ChMode2Num(mode string) (int){
 		}
 	}
 	return -1
+}
+
+func ChMode2Str(mode int) (string){
+	if mode < 0 || mode >= len(ChMode){
+		return "Unknown"
+	}
+	return ChMode[mode]
 }
 
 var ChStep = []string{"1k","5k","6k25","8k33","10k","12k5","15k","20k","25k","30k","50k","100k","125k","200k"}
@@ -201,6 +224,11 @@ func Connect(portName string) (serial.Port, error){
 	response, err := SendCmd(port, "AL~DJ-X100")
 	if (err != nil || response != "OK"){
 		return nil, errors.New("DJ-X100 is not conntected")
+	}
+	// バージョンが取得できない場合は従来のモード表のまま
+	major, err := GetMajorVersion(port)
+	if err == nil {
+		ChMode = SelectChMode(major)
 	}
 	return port, nil
 }
@@ -502,6 +530,75 @@ func SendCmd(port serial.Port , cmd string) (string, error){
 	scanner.Scan()	// response
 	response := scanner.Text()
 	return response, nil
+}
+
+// メジャーバージョン取得
+func GetMajorVersion(port serial.Port) (int, error) {
+	ver, err := SendCmd(port, "AL~VER")
+	if err != nil {
+		return 0, errors.New("version Command Error")
+	}
+	return ParseMajorVersion(ver)
+}
+
+// "ver 4.00-001" 形式からメジャーバージョンを取り出す
+func ParseMajorVersion(ver string) (int, error) {
+	if !strings.Contains(ver, " ") || !strings.Contains(ver, ".") {
+		return 0, errors.New("version Command Error")
+	}
+	return strconv.Atoi(ver[strings.Index(ver, " ")+1 : strings.Index(ver, ".")])
+}
+
+// OPTトークン取得
+func GetToken(urlStr string) (string, error) {
+    client := &http.Client{
+        Timeout: 10 * time.Second,
+    }
+    resp, err := client.Get(urlStr)
+    if err != nil {
+        return "", fmt.Errorf("HTTP request failed: %w", err)
+    }
+    defer resp.Body.Close()
+
+    if resp.StatusCode != http.StatusOK {
+        return "", fmt.Errorf("HTTP error: %d", resp.StatusCode)
+    }
+
+    // 最大32バイトまでに制限
+    body, err := io.ReadAll(io.LimitReader(resp.Body, 32))
+    if err != nil {
+        return "", fmt.Errorf("failed to read response: %w", err)
+    }
+    if len(body) < 16 {
+        return "", fmt.Errorf("token too short: %d bytes", len(body))
+    }
+    token := string(body)[:16]
+    if _, err := hex.DecodeString(token); err != nil {
+        return "", fmt.Errorf("invalid hex token: %w", err)
+    }
+    return token, nil
+}
+
+// OTP Auth
+func AuthOTP(port serial.Port, server string) (string, error){
+	otp, err := SendCmd(port, "AL~DJX100")
+	if err != nil {
+		return "",fmt.Errorf("failed to read response: %w", err)
+	}
+	url := strings.Replace(server,":otp",otp,-1)
+	token, err := GetToken(url)
+	// fmt.Printf("%s -> %s\n", otp, token)
+	if err != nil {
+		return "", errors.New("token server error")
+	}
+	response, err := SendCmd(port, "AL~DJX100"+token)
+	if err != nil {
+		return "", fmt.Errorf("failed to read response: %w", err)
+	}
+	if response != "OK" {
+		return "", errors.New("OTP Auth Error")
+	}
+	return fmt.Sprintf("%s,%s,%s", response, otp, token), nil
 }
 
 // リスタート送信

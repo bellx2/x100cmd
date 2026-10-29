@@ -51,19 +51,23 @@ x100cmd exec restart
 
 - [`exec`] - 制御コマンド実行
 
+- [`otp`] - OTP認証
+
 | グローバルフラグ | デフォルト | 説明                                               |
 | ---------------- | ---------- | -------------------------------------------------- |
 | `-p`, `--port`   | `auto`     | シリアルポート名 <br/>`auto`の場合は自動検索します |
+| `--url`          | `https://dj256.t7b.workers.dev/v1/otp/:otp` | OTPトークン取得先 <br/>`:otp`は本体から取得したOTPに置き換えます |
 | `--debug`        | false      | デバッグ表示                                       |
 
 ### `x100cmd check`
 
 接続状態を確認します。
 
-```sh
+```text
 x100cmd check
 
 ** scan ports **
+/dev/cu.debug-console
 /dev/cu.wlan-debug
 /dev/cu.Bluetooth-Incoming-Port
 /dev/cu.usbmodem00000000000001 [3614:D001] DJ-X100!
@@ -72,11 +76,10 @@ x100cmd check
 PortName: auto
 DJ-X100 PortName: /dev/cu.usbmodem00000000000001
 
-** send command **
-OK
-
-** current freq **
-433.000000
+Device Check :  DJ-X100
+Current Version :  ver 2.00-000
+Major Version :  2
+Freq:   464.884374, 464.884375
 ```
 
 ### `x100cmd read <channel_no>`<br/>`x100cmd ch read <channel_no>`
@@ -101,7 +104,7 @@ x100cmd write 10 -f 433.00 -m FM -n "430メイン" -s "20k" -r
 | フラグ | 初期値 | 説明 |
 | ----------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `-f`, `--freq` | | 周波数 (e.g. 433.0) |
-| `-m`, `--mode` | | モード: FM, NFM, AM, NAM, T98 , T102_B54, DMR, T61_typ1, T61_typ2, T61_typ3, T61_typ4,T61_typx,ICDU,dPMR,DSTAR, C4FM, AIS, ACARS, POCSAG, 12KIF_W, 12KIF_N <br />※対応してないモードは表示されない? |
+| `-m`, `--mode` | | モード: FM, NFM, AM, NAM, T98 , T102_B54, DMR, NXDN_N(V4のみ), T61_typ1, T61_typ2, T61_typ3, T61_typ4,T61_typx,ICDU,dPMR,DSTAR, C4FM, AIS, ACARS, POCSAG, 12KIF_W, 12KIF_N <br />※対応してないモードは表示されない? <br />※接続時に`AL~VER`で判定し、CPU 4.00以降(V4)はNXDN_Nを含むモード値で読み書きします |
 | `-s`, `--step` | | 周波数ステップ: 1k, 5k, 6k25, 8k33, 10k, 12k5,15k, 20k, 25k, 30k, 50k, 100k, 125k,200k |
 | `-n`, `--name` | | 名称 (UTF-8) 最大: 30byte, NONE で空白 |
 | `--offset` | | オフセット : ON, OFF |
@@ -226,9 +229,9 @@ Channel,Freq,Mode,Step,Name,offset,shift_freq,att,sq,tone,dcs,bank,lat,lon,skip,
 
 ### `x100cmd bank read <A-Z>`
 
-**(初期ファームウェア v1.00 のみ)**
+**(初期ファームウェア v1.00 、またはメジャーバージョン2以降でOTP認証が通る場合)**
 
-バンク名を読み込みます。バンクは A-Z で指定します。省略した場合はすべてのバンクを出力します
+バンク名を読み込みます。メジャーバージョン2以降では実行前にOTP認証を行います。バンクは A-Z で指定します。省略した場合はすべてのバンクを出力します
 
 ```sh
 x100cmd bank read A
@@ -242,9 +245,9 @@ x100cmd bank read ABC
 
 ### `x100cmd bank write <A-Z> <bank_name>`
 
-**(ファームウェア v1.00 のみ)**
+**(初期ファームウェア v1.00 、またはメジャーバージョン2以降でOTP認証が通る場合)**
 
-バンク名を書き込みます。バンクは A-Z で指定します。再起動するまで反映されません。`-r`オプションを付けると書き込み後に再起動を行います。名称に`NONE`を指定すると名称を消去します（表示は`バンク-A~Z`となります）。
+バンク名を書き込みます。メジャーバージョン2以降では実行前にOTP認証を行います。バンクは A-Z で指定します。再起動するまで反映されません。`-r`オプションを付けると書き込み後に再起動を行います。名称に`NONE`を指定すると名称を消去します（表示は`バンク-A~Z`となります）。
 
 ```sh
 x100cmd bank write A "羽田空港" -r
@@ -254,6 +257,14 @@ x100cmd bank write A "羽田空港" -r
 | ----------------- | ------ | ------------------ |
 | `-y`, `--yes`     | false  | 上書き確認をしない |
 | `-r`, `--restart` | false  | 実行後再起動       |
+
+### `x100cmd otp`
+
+本体からOTPを取得し、`--url`のサーバーで得たトークンを本体へ送って認証します。成功すると`OK,<otp>,<token>`を表示します。
+
+```sh
+x100cmd otp
+```
 
 ### `x100cmd exec <command>`
 
