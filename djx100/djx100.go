@@ -86,6 +86,19 @@ func SelectChMode(major int) []string {
 	return ChModeV2
 }
 
+// V2のモード値をV4の値に変換 (NXDN_N挿入で0x07以降が+1)。変換対象でなければfalse
+func ConvertModeV2toV4(data string) (string, bool) {
+	if data[0:8] == "FFFFFFFF" {
+		return data, false
+	}
+	chByte, _ := hex.DecodeString(data)
+	if chByte[0x04] < 0x07 || chByte[0x04] >= byte(len(ChModeV2)) {
+		return data, false
+	}
+	chByte[0x04]++
+	return hex.EncodeToString(chByte), true
+}
+
 func ChMode2Num(mode string) (int){
 	for i, v := range ChMode {
 		if v == mode {

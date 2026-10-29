@@ -1,6 +1,7 @@
 package djx100
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -185,5 +186,29 @@ func TestSelectChMode(t *testing.T){
 	}
 	if _, err := ParseMajorVersion("unknown"); err == nil {
 		t.Errorf("ParseMajorVersion(\"unknown\") should fail")
+	}
+}
+
+func TestConvertModeV2toV4(t *testing.T){
+	if _, ok := ConvertModeV2toV4("00000000FF" + BaseData[10:]); ok {
+		t.Errorf("out of range mode should not be converted")
+	}
+	for m := 0; m < len(ChModeV2); m++ {
+		data := "00000000" + fmt.Sprintf("%02X", m) + BaseData[10:]
+		got, ok := ConvertModeV2toV4(data)
+		if (m >= 0x07) != ok {
+			t.Errorf("mode 0x%02x: converted=%v", m, ok)
+			continue
+		}
+		d, _ := ParseChData(got)
+		ChMode = ChModeV4
+		name := ChMode2Str(d.Mode)
+		ChMode = ChModeV2
+		if name != ChModeV2[m] {
+			t.Errorf("mode 0x%02x: %s -> %s", m, ChModeV2[m], name)
+		}
+	}
+	if _, ok := ConvertModeV2toV4(BaseData); ok {
+		t.Errorf("empty channel should not be converted")
 	}
 }
