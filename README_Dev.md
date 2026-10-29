@@ -29,3 +29,7 @@ go build -ldflags "-X github.com/bellx2/x100cmd/cmd.otpURL=https://example.com/v
 ```
 
 リリース（GoReleaser）では環境変数`OTP_URL`の値を埋め込みます。GitHub Actionsではリポジトリの Secrets に`OTP_URL`を登録してください。
+
+## OTP Server
+
+仕様は [docs/otp-server.md](docs/otp-server.md) を参照。
