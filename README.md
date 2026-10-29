@@ -8,7 +8,7 @@
 
 ## :beginner: 使い方
 
-- macos の場合[Homebrew](https://brew.sh/index_ja)がインストール済みであれば`brew install --cask bellx2/tap/x100cmd`でインストール可能です。アップデートは`brew upgrade --cask x100cmd`で行えます。
+- macos の場合[Homebrew](https://brew.sh/index_ja)がインストール済みであれば`brew install --cask bellx2/tap/x100cmd`でインストール可能です。アップデートは`brew upgrade x100cmd`で行えます。
   - v1.3.10 以前を Homebrew でインストールしている場合は、Formula から Cask へ移行したため一度入れ直してください。<br/>`brew uninstall x100cmd && brew install --cask bellx2/tap/x100cmd`
 - Windows/macos 用のビルド済みバイナリーは[Releases](https://github.com/bellx2/x100cmd/releases/)よりダウンロードできます。任意の場所に置いて実行してください。
 - [DJ-X100](https://www.alinco.co.jp/product/electron/detail/djx100.html) を USB ケーブルで接続します。
